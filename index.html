@@ -2,13 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <!-- 📱 Mobile friendly -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Typing Game</title>
 
-  <!-- 🎨 CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -17,10 +14,8 @@
   <div class="container">
     <h1>⌨️ Typing Game</h1>
 
-    <!-- ✨ Sentence (letters will be injected here) -->
     <p id="sentence"></p>
 
-    <!-- 📱 Mobile optimized textarea -->
     <textarea 
       id="input"
       placeholder="Start typing..."
@@ -34,12 +29,12 @@
     <div class="stats">
       <span>Time: <span id="time">0</span>s</span>
       <span>WPM: <span id="wpm">0</span></span>
+      <span>High Score: <span id="highScore">0</span></span>
     </div>
 
     <button onclick="startGame()">Start</button>
   </div>
 
-  <!-- ⚙️ JS -->
   <script src="script.js"></script>
 
 </body>
