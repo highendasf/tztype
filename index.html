@@ -16,7 +16,6 @@
 
     <p id="sentence"></p>
 
-    <!-- 📱 STRONG MOBILE + NO AUTOCORRECT -->
     <textarea 
       id="input"
       placeholder="Start typing..."
@@ -25,9 +24,7 @@
       autocomplete="off"
       autocorrect="off"
       autocapitalize="off"
-      spellcheck="false"
-      data-form-type="other"
-      data-gramm="false">
+      spellcheck="false">
     </textarea>
 
     <div class="stats">
@@ -37,6 +34,10 @@
     </div>
 
     <button onclick="startGame()">Start</button>
+
+    <!-- ⌨️ QWERTY KEYBOARD -->
+    <div id="keyboard"></div>
+
   </div>
 
   <script src="script.js"></script>
