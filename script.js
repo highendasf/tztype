@@ -1,8 +1,20 @@
 const sentences = [
+ 
   "The quick brown fox jumps over the lazy dog",
   "Typing fast takes practice and patience",
   "JavaScript makes websites interactive",
-  "Practice every day to improve your speed"
+  "Practice every day to improve your speed",
+  "Never stop learning new skills",
+  "Coding is like solving puzzles",
+  "Small steps lead to big progress",
+  "Focus and accuracy are more important than speed",
+  "Errors help you become a better programmer",
+  "Build projects to learn faster",
+  "Consistency beats motivation",
+  "Stay calm and keep typing",
+  "Every expert was once a beginner",
+  "Debugging is part of programming",
+  "Good code is simple code"
 ];
 
 let startTime, timerInterval, currentSentence = "";
@@ -69,4 +81,4 @@ function checkTyping() {
 
     document.getElementById("wpm").innerText = wpm;
   }
-}
+      }
