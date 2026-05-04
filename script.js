@@ -14,8 +14,9 @@ const sentences = [
 let currentSentence = "";
 let typedText = "";
 let startTime, timerInterval;
+let capsLock = false;
 
-// 🏆 High score
+// 🏆 high score
 let highScore = localStorage.getItem("highScore") || 0;
 
 window.onload = () => {
@@ -81,7 +82,7 @@ function checkTyping() {
   }
 }
 
-/* ⌨️ QWERTY KEYBOARD */
+/* ⌨️ KEYBOARD */
 const layout = [
   ["Q","W","E","R","T","Y","U","I","O","P"],
   ["A","S","D","F","G","H","J","K","L"],
@@ -100,7 +101,9 @@ layout.forEach(row => {
     key.innerText = letter;
 
     key.onclick = () => {
-      typedText += letter.toLowerCase();
+      let char = capsLock ? letter : letter.toLowerCase();
+
+      typedText += char;
       updateTyped();
     };
 
@@ -110,11 +113,11 @@ layout.forEach(row => {
   keyboard.appendChild(rowDiv);
 });
 
-// bottom row
+/* bottom row */
 const bottomRow = document.createElement("div");
 bottomRow.className = "row";
 
-// SPACE
+/* SPACE */
 const space = document.createElement("div");
 space.className = "key wide";
 space.innerText = "SPACE";
@@ -124,7 +127,7 @@ space.onclick = () => {
   updateTyped();
 };
 
-// BACKSPACE
+/* BACKSPACE */
 const backspace = document.createElement("div");
 backspace.className = "key wide";
 backspace.innerText = "⌫";
@@ -134,7 +137,18 @@ backspace.onclick = () => {
   updateTyped();
 };
 
+/* CAPS LOCK */
+const caps = document.createElement("div");
+caps.className = "key wide";
+caps.innerText = "CAPS";
+
+caps.onclick = () => {
+  capsLock = !capsLock;
+  caps.innerText = capsLock ? "CAPS ON" : "CAPS";
+};
+
 bottomRow.appendChild(space);
 bottomRow.appendChild(backspace);
+bottomRow.appendChild(caps);
 
 keyboard.appendChild(bottomRow);
