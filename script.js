@@ -1,5 +1,3 @@
-console.log("SCRIPT LOADED ✔");
-
 const sentences = [
   "The quick brown fox jumps over the lazy dog",
   "Typing fast takes practice and patience",
@@ -7,179 +5,91 @@ const sentences = [
   "Practice every day to improve your speed",
   "Never stop learning new skills",
   "Coding is like solving puzzles",
-  "Focus and accuracy matter more than speed",
+  "Small steps lead to big progress",
+  "Focus and accuracy are more important than speed",
+  "Errors help you become a better programmer",
+  "Build projects to learn faster",
   "Consistency beats motivation",
+  "Stay calm and keep typing",
+  "Every expert was once a beginner",
   "Debugging is part of programming",
-  "Every expert was once a beginner"
+  "Good code is simple code"
 ];
 
-let currentSentence = "";
-let typedText = "";
-let startTime, timerInterval;
-let capsLock = false;
+let startTime, timerInterval, currentSentence = "";
 
-// 🏆 high score
-let highScore = localStorage.getItem("highScore") || 0;
+const input = document.getElementById("input");
 
-window.onload = () => {
-  document.getElementById("highScore").innerText = highScore;
-};
+// ✅ Attach ONCE only (fixes duplicate event bug)
+input.oninput = checkTyping;
+
+// ✅ Prevent Enter key (mobile fix)
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+  }
+});
 
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+  const sentenceEl = document.getElementById("sentence");
 
-  document.getElementById("sentence").innerHTML =
-    currentSentence.split("").map(c => `<span>${c}</span>`).join("");
+  // 🧩 Split sentence into letters
+  sentenceEl.innerHTML = currentSentence
+    .split("")
+    .map(letter => `<span>${letter}</span>`)
+    .join("");
 
-  typedText = "";
-  updateTyped();
+  input.value = "";
+  input.disabled = false;
+  input.focus();
 
-  startTime = Date.now();
+  startTime = new Date().getTime();
 
   clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    document.getElementById("time").innerText =
-      Math.floor((Date.now() - startTime) / 1000);
-  }, 1000);
+  timerInterval = setInterval(updateTime, 1000);
 }
 
-function updateTyped() {
-  document.getElementById("typed").innerText = typedText;
-  checkTyping();
+function updateTime() {
+  const seconds = Math.floor((new Date().getTime() - startTime) / 1000);
+  document.getElementById("time").innerText = seconds;
 }
 
 function checkTyping() {
+  const value = input.value;
   const letters = document.querySelectorAll("#sentence span");
 
-  letters.forEach((span, i) => {
-    const char = typedText[i];
+  let correct = true;
 
-    span.classList.remove("correct", "wrong");
+  letters.forEach((span, index) => {
+    const typedChar = value[index];
 
-    if (!char) return;
-
-    if (char === span.innerText) {
+    if (typedChar == null) {
+      span.classList.remove("correct", "wrong");
+      correct = false;
+    } 
+    else if (typedChar === span.innerText) {
       span.classList.add("correct");
-    } else {
+      span.classList.remove("wrong");
+    } 
+    else {
       span.classList.add("wrong");
+      span.classList.remove("correct");
+      correct = false;
     }
   });
 
-  if (typedText === currentSentence && currentSentence.length > 0) {
-    finishGame();
+  // ✅ Finish check (fixed)
+  if (value.trim() === currentSentence) {
+    clearInterval(timerInterval);
+
+    const totalTime = (new Date().getTime() - startTime) / 1000;
+    const wordCount = currentSentence.split(" ").length;
+    const wpm = Math.round((wordCount / totalTime) * 60);
+
+    document.getElementById("wpm").innerText = wpm;
   }
+
+  // 📱 Keep cursor visible on mobile
+  input.scrollTop = input.scrollHeight;
 }
-
-function finishGame() {
-  clearInterval(timerInterval);
-
-  const time = (Date.now() - startTime) / 1000;
-  const words = currentSentence.split(" ").length;
-  const wpm = Math.round((words / time) * 60);
-
-  document.getElementById("wpm").innerText = wpm;
-
-  if (wpm > highScore) {
-    highScore = wpm;
-    localStorage.setItem("highScore", highScore);
-    document.getElementById("highScore").innerText = highScore;
-  }
-}
-
-/* ⌨️ ON-SCREEN KEYBOARD */
-const layout = [
-  ["Q","W","E","R","T","Y","U","I","O","P"],
-  ["A","S","D","F","G","H","J","K","L"],
-  ["Z","X","C","V","B","N","M"]
-];
-
-const keyboard = document.getElementById("keyboard");
-
-layout.forEach(row => {
-  const rowDiv = document.createElement("div");
-  rowDiv.className = "row";
-
-  row.forEach(letter => {
-    const key = document.createElement("div");
-    key.className = "key";
-    key.innerText = letter;
-
-    key.onclick = () => {
-      let char = capsLock ? letter.toUpperCase() : letter.toLowerCase();
-      typedText += char;
-      updateTyped();
-    };
-
-    rowDiv.appendChild(key);
-  });
-
-  keyboard.appendChild(rowDiv);
-});
-
-/* bottom row */
-const bottomRow = document.createElement("div");
-bottomRow.className = "row";
-
-/* SPACE */
-const space = document.createElement("div");
-space.className = "key wide";
-space.innerText = "SPACE";
-space.onclick = () => {
-  typedText += " ";
-  updateTyped();
-};
-
-/* BACKSPACE */
-const backspace = document.createElement("div");
-backspace.className = "key wide";
-backspace.innerText = "⌫";
-backspace.onclick = () => {
-  typedText = typedText.slice(0, -1);
-  updateTyped();
-};
-
-/* CAPS LOCK */
-const caps = document.createElement("div");
-caps.className = "key wide";
-caps.innerText = "CAPS OFF";
-
-caps.onclick = () => {
-  capsLock = !capsLock;
-  caps.innerText = capsLock ? "CAPS ON" : "CAPS OFF";
-};
-
-bottomRow.appendChild(space);
-bottomRow.appendChild(backspace);
-bottomRow.appendChild(caps);
-
-keyboard.appendChild(bottomRow);
-
-/* ⌨️ PHYSICAL KEYBOARD SUPPORT */
-document.addEventListener("keydown", (e) => {
-  if (!currentSentence) return;
-
-  const key = e.key;
-
-  if (key === "Backspace") {
-    typedText = typedText.slice(0, -1);
-    updateTyped();
-    return;
-  }
-
-  if (key === " ") {
-    e.preventDefault();
-    typedText += " ";
-    updateTyped();
-    return;
-  }
-
-  if (key.length === 1) {
-    typedText += capsLock ? key.toUpperCase() : key.toLowerCase();
-    updateTyped();
-  }
-});
-
-/* prevent space scroll */
-window.addEventListener("keydown", (e) => {
-  if (e.key === " " && currentSentence) e.preventDefault();
-});
