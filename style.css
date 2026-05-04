@@ -32,20 +32,6 @@ body {
   overflow-wrap: break-word;
 }
 
-.correct { color: #4caf50; }
-.wrong { color: #ff4d4d; }
-
-button {
-  margin-top: 15px;
-  padding: 14px;
-  width: 100%;
-  font-size: 18px;
-  border: none;
-  background: #4caf50;
-  color: white;
-  border-radius: 10px;
-}
-
 .stats {
   margin-top: 15px;
   display: flex;
@@ -58,34 +44,44 @@ button {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
 }
 
+/* rows */
 .row {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
+/* keys */
 .key {
   background: #2e2e4d;
   color: white;
-  padding: 8px 0;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   user-select: none;
 
-  width: 26px;
-  font-size: 13px;
-  text-align: center;
+  width: 36px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+
+  transition: 0.12s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .key:active {
+  transform: scale(0.92);
   background: #4caf50;
 }
 
 .key.wide {
-  width: 65px;
+  width: 85px;
 }
