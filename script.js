@@ -1,29 +1,26 @@
 const sentences = [
- 
   "The quick brown fox jumps over the lazy dog",
   "Typing fast takes practice and patience",
   "JavaScript makes websites interactive",
   "Practice every day to improve your speed",
   "Never stop learning new skills",
   "Coding is like solving puzzles",
-  "Small steps lead to big progress",
-  "Focus and accuracy are more important than speed",
-  "Errors help you become a better programmer",
-  "Build projects to learn faster",
+  "Focus and accuracy matter more than speed",
   "Consistency beats motivation",
-  "Stay calm and keep typing",
-  "Every expert was once a beginner",
   "Debugging is part of programming",
-  "Good code is simple code"
+  "Every expert was once a beginner"
 ];
 
 let startTime, timerInterval, currentSentence = "";
+
+// 🏆 Load high score
+let highScore = localStorage.getItem("highScore") || 0;
+document.getElementById("highScore").innerText = highScore;
 
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
   const sentenceEl = document.getElementById("sentence");
 
-  // 🧩 Split sentence into letters
   sentenceEl.innerHTML = currentSentence
     .split("")
     .map(letter => `<span>${letter}</span>`)
@@ -51,14 +48,11 @@ function checkTyping() {
   const input = document.getElementById("input").value;
   const letters = document.querySelectorAll("#sentence span");
 
-  let correct = true;
-
   letters.forEach((span, index) => {
     const typedChar = input[index];
 
     if (typedChar == null) {
       span.classList.remove("correct", "wrong");
-      correct = false;
     } 
     else if (typedChar === span.innerText) {
       span.classList.add("correct");
@@ -67,11 +61,9 @@ function checkTyping() {
     else {
       span.classList.add("wrong");
       span.classList.remove("correct");
-      correct = false;
     }
   });
 
-  // ✅ Finished typing
   if (input === currentSentence) {
     clearInterval(timerInterval);
 
@@ -80,5 +72,12 @@ function checkTyping() {
     const wpm = Math.round((wordCount / totalTime) * 60);
 
     document.getElementById("wpm").innerText = wpm;
+
+    // 🏆 Save high score
+    if (wpm > highScore) {
+      highScore = wpm;
+      localStorage.setItem("highScore", highScore);
+      document.getElementById("highScore").innerText = highScore;
+    }
   }
-      }
+}
