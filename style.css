@@ -39,7 +39,7 @@ body {
   font-size: 14px;
 }
 
-/* ⌨️ KEYBOARD */
+/* ⌨️ KEYBOARD FIXED */
 #keyboard {
   margin-top: 12px;
   display: flex;
@@ -48,7 +48,6 @@ body {
   align-items: center;
 }
 
-/* rows */
 .row {
   display: flex;
   justify-content: center;
@@ -56,7 +55,6 @@ body {
   flex-wrap: wrap;
 }
 
-/* keys */
 .key {
   background: #2e2e4d;
   color: white;
