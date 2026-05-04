@@ -1,3 +1,5 @@
+console.log("SCRIPT LOADED ✔");
+
 const sentences = [
   "The quick brown fox jumps over the lazy dog",
   "Typing fast takes practice and patience",
@@ -16,7 +18,7 @@ let typedText = "";
 let startTime, timerInterval;
 let capsLock = false;
 
-// 🏆 high score
+// 🏆 High score
 let highScore = localStorage.getItem("highScore") || 0;
 
 window.onload = () => {
@@ -39,8 +41,8 @@ function startGame() {
 }
 
 function updateTime() {
-  const seconds = Math.floor((Date.now() - startTime) / 1000);
-  document.getElementById("time").innerText = seconds;
+  document.getElementById("time").innerText =
+    Math.floor((Date.now() - startTime) / 1000);
 }
 
 function updateTyped() {
@@ -91,6 +93,8 @@ const layout = [
 
 const keyboard = document.getElementById("keyboard");
 
+if (!keyboard) console.error("Keyboard missing in HTML!");
+
 layout.forEach(row => {
   const rowDiv = document.createElement("div");
   rowDiv.className = "row";
@@ -102,7 +106,6 @@ layout.forEach(row => {
 
     key.onclick = () => {
       let char = capsLock ? letter : letter.toLowerCase();
-
       typedText += char;
       updateTyped();
     };
@@ -121,7 +124,6 @@ bottomRow.className = "row";
 const space = document.createElement("div");
 space.className = "key wide";
 space.innerText = "SPACE";
-
 space.onclick = () => {
   typedText += " ";
   updateTyped();
@@ -131,7 +133,6 @@ space.onclick = () => {
 const backspace = document.createElement("div");
 backspace.className = "key wide";
 backspace.innerText = "⌫";
-
 backspace.onclick = () => {
   typedText = typedText.slice(0, -1);
   updateTyped();
@@ -140,11 +141,12 @@ backspace.onclick = () => {
 /* CAPS LOCK */
 const caps = document.createElement("div");
 caps.className = "key wide";
-caps.innerText = "CAPS";
+caps.innerText = "CAPS OFF";
 
 caps.onclick = () => {
   capsLock = !capsLock;
-  caps.innerText = capsLock ? "CAPS ON" : "CAPS";
+  caps.innerText = capsLock ? "CAPS ON" : "CAPS OFF";
+  console.log("Caps:", capsLock);
 };
 
 bottomRow.appendChild(space);
