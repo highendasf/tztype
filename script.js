@@ -11,10 +11,13 @@ const sentences = [
   "Every expert was once a beginner"
 ];
 
-let startTime, timerInterval, currentSentence = "";
+let currentSentence = "";
+let typedText = "";
+let startTime, timerInterval;
 
 // 🏆 High score
 let highScore = localStorage.getItem("highScore") || 0;
+
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
 };
@@ -25,10 +28,8 @@ function startGame() {
   document.getElementById("sentence").innerHTML =
     currentSentence.split("").map(c => `<span>${c}</span>`).join("");
 
-  const input = document.getElementById("input");
-  input.value = "";
-  input.disabled = false;
-  input.focus();
+  typedText = "";
+  updateTyped();
 
   startTime = Date.now();
 
@@ -36,20 +37,21 @@ function startGame() {
   timerInterval = setInterval(updateTime, 1000);
 }
 
-// ⌨️ Input listener
-document.getElementById("input").addEventListener("input", checkTyping);
-
 function updateTime() {
   const seconds = Math.floor((Date.now() - startTime) / 1000);
   document.getElementById("time").innerText = seconds;
 }
 
+function updateTyped() {
+  document.getElementById("typed").innerText = typedText;
+  checkTyping();
+}
+
 function checkTyping() {
-  const input = document.getElementById("input").value;
   const letters = document.querySelectorAll("#sentence span");
 
   letters.forEach((span, i) => {
-    const char = input[i];
+    const char = typedText[i];
 
     if (!char) {
       span.classList.remove("correct", "wrong");
@@ -62,7 +64,7 @@ function checkTyping() {
     }
   });
 
-  if (input === currentSentence) {
+  if (typedText === currentSentence) {
     clearInterval(timerInterval);
 
     const time = (Date.now() - startTime) / 1000;
@@ -79,7 +81,7 @@ function checkTyping() {
   }
 }
 
-/* ⌨️ QWERTY KEYBOARD BUILDER */
+/* ⌨️ QWERTY KEYBOARD */
 const layout = [
   ["Q","W","E","R","T","Y","U","I","O","P"],
   ["A","S","D","F","G","H","J","K","L"],
@@ -88,7 +90,6 @@ const layout = [
 
 const keyboard = document.getElementById("keyboard");
 
-// rows
 layout.forEach(row => {
   const rowDiv = document.createElement("div");
   rowDiv.className = "row";
@@ -99,12 +100,8 @@ layout.forEach(row => {
     key.innerText = letter;
 
     key.onclick = () => {
-      const input = document.getElementById("input");
-      if (input.disabled) return;
-
-      input.value += letter.toLowerCase();
-      input.dispatchEvent(new Event("input"));
-      input.focus();
+      typedText += letter.toLowerCase();
+      updateTyped();
     };
 
     rowDiv.appendChild(key);
@@ -123,12 +120,8 @@ space.className = "key wide";
 space.innerText = "SPACE";
 
 space.onclick = () => {
-  const input = document.getElementById("input");
-  if (input.disabled) return;
-
-  input.value += " ";
-  input.dispatchEvent(new Event("input"));
-  input.focus();
+  typedText += " ";
+  updateTyped();
 };
 
 // BACKSPACE
@@ -137,12 +130,8 @@ backspace.className = "key wide";
 backspace.innerText = "⌫";
 
 backspace.onclick = () => {
-  const input = document.getElementById("input");
-  if (input.disabled) return;
-
-  input.value = input.value.slice(0, -1);
-  input.dispatchEvent(new Event("input"));
-  input.focus();
+  typedText = typedText.slice(0, -1);
+  updateTyped();
 };
 
 bottomRow.appendChild(space);
