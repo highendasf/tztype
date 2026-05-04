@@ -13,9 +13,8 @@ const sentences = [
 
 let startTime, timerInterval, currentSentence = "";
 
-// 🏆 Load high score
+// 🏆 High score
 let highScore = localStorage.getItem("highScore") || 0;
-
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
 };
@@ -27,16 +26,8 @@ function startGame() {
     currentSentence.split("").map(c => `<span>${c}</span>`).join("");
 
   const input = document.getElementById("input");
-
   input.value = "";
   input.disabled = false;
-
-  // 🔥 FORCE disable autocorrect behavior
-  input.setAttribute("autocorrect", "off");
-  input.setAttribute("autocomplete", "off");
-  input.setAttribute("autocapitalize", "off");
-  input.setAttribute("spellcheck", "false");
-
   input.focus();
 
   startTime = Date.now();
@@ -45,6 +36,7 @@ function startGame() {
   timerInterval = setInterval(updateTime, 1000);
 }
 
+// ⌨️ Input listener
 document.getElementById("input").addEventListener("input", checkTyping);
 
 function updateTime() {
@@ -79,7 +71,6 @@ function checkTyping() {
 
     document.getElementById("wpm").innerText = wpm;
 
-    // 🏆 Save high score
     if (wpm > highScore) {
       highScore = wpm;
       localStorage.setItem("highScore", highScore);
@@ -87,3 +78,74 @@ function checkTyping() {
     }
   }
 }
+
+/* ⌨️ QWERTY KEYBOARD BUILDER */
+const layout = [
+  ["Q","W","E","R","T","Y","U","I","O","P"],
+  ["A","S","D","F","G","H","J","K","L"],
+  ["Z","X","C","V","B","N","M"]
+];
+
+const keyboard = document.getElementById("keyboard");
+
+// rows
+layout.forEach(row => {
+  const rowDiv = document.createElement("div");
+  rowDiv.className = "row";
+
+  row.forEach(letter => {
+    const key = document.createElement("div");
+    key.className = "key";
+    key.innerText = letter;
+
+    key.onclick = () => {
+      const input = document.getElementById("input");
+      if (input.disabled) return;
+
+      input.value += letter.toLowerCase();
+      input.dispatchEvent(new Event("input"));
+      input.focus();
+    };
+
+    rowDiv.appendChild(key);
+  });
+
+  keyboard.appendChild(rowDiv);
+});
+
+// bottom row
+const bottomRow = document.createElement("div");
+bottomRow.className = "row";
+
+// SPACE
+const space = document.createElement("div");
+space.className = "key wide";
+space.innerText = "SPACE";
+
+space.onclick = () => {
+  const input = document.getElementById("input");
+  if (input.disabled) return;
+
+  input.value += " ";
+  input.dispatchEvent(new Event("input"));
+  input.focus();
+};
+
+// BACKSPACE
+const backspace = document.createElement("div");
+backspace.className = "key wide";
+backspace.innerText = "⌫";
+
+backspace.onclick = () => {
+  const input = document.getElementById("input");
+  if (input.disabled) return;
+
+  input.value = input.value.slice(0, -1);
+  input.dispatchEvent(new Event("input"));
+  input.focus();
+};
+
+bottomRow.appendChild(space);
+bottomRow.appendChild(backspace);
+
+keyboard.appendChild(bottomRow);
