@@ -18,7 +18,7 @@ let typedText = "";
 let startTime, timerInterval;
 let capsLock = false;
 
-// 🏆 High score
+// 🏆 high score
 let highScore = localStorage.getItem("highScore") || 0;
 
 window.onload = () => {
@@ -37,12 +37,10 @@ function startGame() {
   startTime = Date.now();
 
   clearInterval(timerInterval);
-  timerInterval = setInterval(updateTime, 1000);
-}
-
-function updateTime() {
-  document.getElementById("time").innerText =
-    Math.floor((Date.now() - startTime) / 1000);
+  timerInterval = setInterval(() => {
+    document.getElementById("time").innerText =
+      Math.floor((Date.now() - startTime) / 1000);
+  }, 1000);
 }
 
 function updateTyped() {
@@ -56,35 +54,39 @@ function checkTyping() {
   letters.forEach((span, i) => {
     const char = typedText[i];
 
-    if (!char) {
-      span.classList.remove("correct", "wrong");
-    } else if (char === span.innerText) {
+    span.classList.remove("correct", "wrong");
+
+    if (!char) return;
+
+    if (char === span.innerText) {
       span.classList.add("correct");
-      span.classList.remove("wrong");
     } else {
       span.classList.add("wrong");
-      span.classList.remove("correct");
     }
   });
 
-  if (typedText === currentSentence) {
-    clearInterval(timerInterval);
-
-    const time = (Date.now() - startTime) / 1000;
-    const words = currentSentence.split(" ").length;
-    const wpm = Math.round((words / time) * 60);
-
-    document.getElementById("wpm").innerText = wpm;
-
-    if (wpm > highScore) {
-      highScore = wpm;
-      localStorage.setItem("highScore", highScore);
-      document.getElementById("highScore").innerText = highScore;
-    }
+  if (typedText === currentSentence && currentSentence.length > 0) {
+    finishGame();
   }
 }
 
-/* ⌨️ KEYBOARD */
+function finishGame() {
+  clearInterval(timerInterval);
+
+  const time = (Date.now() - startTime) / 1000;
+  const words = currentSentence.split(" ").length;
+  const wpm = Math.round((words / time) * 60);
+
+  document.getElementById("wpm").innerText = wpm;
+
+  if (wpm > highScore) {
+    highScore = wpm;
+    localStorage.setItem("highScore", highScore);
+    document.getElementById("highScore").innerText = highScore;
+  }
+}
+
+/* ⌨️ ON-SCREEN KEYBOARD */
 const layout = [
   ["Q","W","E","R","T","Y","U","I","O","P"],
   ["A","S","D","F","G","H","J","K","L"],
@@ -92,8 +94,6 @@ const layout = [
 ];
 
 const keyboard = document.getElementById("keyboard");
-
-if (!keyboard) console.error("Keyboard missing in HTML!");
 
 layout.forEach(row => {
   const rowDiv = document.createElement("div");
@@ -105,7 +105,7 @@ layout.forEach(row => {
     key.innerText = letter;
 
     key.onclick = () => {
-      let char = capsLock ? letter : letter.toLowerCase();
+      let char = capsLock ? letter.toUpperCase() : letter.toLowerCase();
       typedText += char;
       updateTyped();
     };
@@ -146,7 +146,6 @@ caps.innerText = "CAPS OFF";
 caps.onclick = () => {
   capsLock = !capsLock;
   caps.innerText = capsLock ? "CAPS ON" : "CAPS OFF";
-  console.log("Caps:", capsLock);
 };
 
 bottomRow.appendChild(space);
@@ -154,3 +153,33 @@ bottomRow.appendChild(backspace);
 bottomRow.appendChild(caps);
 
 keyboard.appendChild(bottomRow);
+
+/* ⌨️ PHYSICAL KEYBOARD SUPPORT */
+document.addEventListener("keydown", (e) => {
+  if (!currentSentence) return;
+
+  const key = e.key;
+
+  if (key === "Backspace") {
+    typedText = typedText.slice(0, -1);
+    updateTyped();
+    return;
+  }
+
+  if (key === " ") {
+    e.preventDefault();
+    typedText += " ";
+    updateTyped();
+    return;
+  }
+
+  if (key.length === 1) {
+    typedText += capsLock ? key.toUpperCase() : key.toLowerCase();
+    updateTyped();
+  }
+});
+
+/* prevent space scroll */
+window.addEventListener("keydown", (e) => {
+  if (e.key === " " && currentSentence) e.preventDefault();
+});
