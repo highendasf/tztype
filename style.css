@@ -52,13 +52,13 @@ button {
   font-size: 14px;
 }
 
-/* ⌨️ KEYBOARD */
+/* ⌨️ KEYBOARD FIX */
 #keyboard {
   margin-top: 15px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  align-items: center; /* ⭐ important */
+  align-items: center; /* ⭐ FIX CENTER */
 }
 
 .row {
@@ -68,7 +68,6 @@ button {
   width: 100%;
 }
 
-/* keys */
 .key {
   background: #2e2e4d;
   color: white;
@@ -77,31 +76,8 @@ button {
   cursor: pointer;
   user-select: none;
 
-  /* ⭐ FIX uniform width */
-  width: 32px;
+  width: 32px; /* ⭐ FIX ALIGNMENT */
   text-align: center;
-}
-
-/* space/backspace */
-.key.wide {
-  width: 90px;
-
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-}
-
-.key {
-  background: #2e2e4d;
-  color: white;
-  padding: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  user-select: none;
-  min-width: 30px;
 }
 
 .key:active {
@@ -109,5 +85,5 @@ button {
 }
 
 .key.wide {
-  min-width: 90px;
-} 
+  width: 90px;
+}
