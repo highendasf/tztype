@@ -12,6 +12,10 @@ body {
   text-align: center;
 }
 
+h1 {
+  font-size: 24px;
+}
+
 #sentence {
   background: #2e2e4d;
   padding: 15px;
@@ -24,7 +28,6 @@ body {
   font-size: 18px;
 }
 
-/* ✅ Highlighting */
 .correct {
   color: #4caf50;
 }
@@ -59,4 +62,5 @@ button {
   margin-top: 15px;
   display: flex;
   justify-content: space-between;
+  font-size: 14px;
 }
