@@ -15,32 +15,40 @@ let startTime, timerInterval, currentSentence = "";
 
 // 🏆 Load high score
 let highScore = localStorage.getItem("highScore") || 0;
-document.getElementById("highScore").innerText = highScore;
+
+window.onload = () => {
+  document.getElementById("highScore").innerText = highScore;
+};
 
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
-  const sentenceEl = document.getElementById("sentence");
 
-  sentenceEl.innerHTML = currentSentence
-    .split("")
-    .map(letter => `<span>${letter}</span>`)
-    .join("");
+  document.getElementById("sentence").innerHTML =
+    currentSentence.split("").map(c => `<span>${c}</span>`).join("");
 
   const input = document.getElementById("input");
+
   input.value = "";
   input.disabled = false;
+
+  // 🔥 FORCE disable autocorrect behavior
+  input.setAttribute("autocorrect", "off");
+  input.setAttribute("autocomplete", "off");
+  input.setAttribute("autocapitalize", "off");
+  input.setAttribute("spellcheck", "false");
+
   input.focus();
 
-  startTime = new Date().getTime();
+  startTime = Date.now();
 
   clearInterval(timerInterval);
   timerInterval = setInterval(updateTime, 1000);
-
-  input.addEventListener("input", checkTyping);
 }
 
+document.getElementById("input").addEventListener("input", checkTyping);
+
 function updateTime() {
-  const seconds = Math.floor((new Date().getTime() - startTime) / 1000);
+  const seconds = Math.floor((Date.now() - startTime) / 1000);
   document.getElementById("time").innerText = seconds;
 }
 
@@ -48,17 +56,15 @@ function checkTyping() {
   const input = document.getElementById("input").value;
   const letters = document.querySelectorAll("#sentence span");
 
-  letters.forEach((span, index) => {
-    const typedChar = input[index];
+  letters.forEach((span, i) => {
+    const char = input[i];
 
-    if (typedChar == null) {
+    if (!char) {
       span.classList.remove("correct", "wrong");
-    } 
-    else if (typedChar === span.innerText) {
+    } else if (char === span.innerText) {
       span.classList.add("correct");
       span.classList.remove("wrong");
-    } 
-    else {
+    } else {
       span.classList.add("wrong");
       span.classList.remove("correct");
     }
@@ -67,9 +73,9 @@ function checkTyping() {
   if (input === currentSentence) {
     clearInterval(timerInterval);
 
-    const totalTime = (new Date().getTime() - startTime) / 1000;
-    const wordCount = currentSentence.split(" ").length;
-    const wpm = Math.round((wordCount / totalTime) * 60);
+    const time = (Date.now() - startTime) / 1000;
+    const words = currentSentence.split(" ").length;
+    const wpm = Math.round((words / time) * 60);
 
     document.getElementById("wpm").innerText = wpm;
 
