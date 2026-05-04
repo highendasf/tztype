@@ -52,31 +52,33 @@ button {
   font-size: 14px;
 }
 
-/* ⌨️ KEYBOARD FIX */
+/* ⌨️ FIXED KEYBOARD */
 #keyboard {
-  margin-top: 15px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  align-items: center; /* ⭐ FIX CENTER */
+  align-items: center;
+  width: 100%;
 }
 
 .row {
   display: flex;
   justify-content: center;
-  gap: 5px;
-  width: 100%;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .key {
   background: #2e2e4d;
   color: white;
-  padding: 10px 0;
+  padding: 8px 0;
   border-radius: 6px;
   cursor: pointer;
   user-select: none;
 
-  width: 32px; /* ⭐ FIX ALIGNMENT */
+  width: 26px;   /* ⭐ smaller so it doesn't push layout */
+  font-size: 13px;
   text-align: center;
 }
 
@@ -85,5 +87,18 @@ button {
 }
 
 .key.wide {
-  width: 90px;
+  width: 65px;
+}
+
+/* 📱 mobile tweak */
+@media (max-width: 480px) {
+  .key {
+    width: 22px;
+    font-size: 11px;
+    padding: 6px 0;
+  }
+
+  .key.wide {
+    width: 55px;
+  }
 }
