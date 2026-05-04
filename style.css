@@ -58,6 +58,34 @@ button {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  align-items: center; /* ⭐ important */
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+
+/* keys */
+.key {
+  background: #2e2e4d;
+  color: white;
+  padding: 10px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+
+  /* ⭐ FIX uniform width */
+  width: 32px;
+  text-align: center;
+}
+
+/* space/backspace */
+.key.wide {
+  width: 90px;
+
 }
 
 .row {
