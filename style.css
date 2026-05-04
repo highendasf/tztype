@@ -8,7 +8,7 @@ body {
 .container {
   max-width: 600px;
   width: 95%;
-  margin: 30px auto;
+  margin: 20px auto;
   text-align: center;
 }
 
@@ -21,7 +21,7 @@ body {
 
 #typed {
   width: 100%;
-  height: 120px;
+  height: 110px;
   margin-top: 15px;
   border-radius: 12px;
   padding: 12px;
@@ -39,7 +39,7 @@ body {
   font-size: 14px;
 }
 
-/* ⌨️ KEYBOARD FIXED */
+/* ⌨️ KEYBOARD */
 #keyboard {
   margin-top: 12px;
   display: flex;
@@ -52,7 +52,6 @@ body {
   display: flex;
   justify-content: center;
   gap: 6px;
-  flex-wrap: wrap;
 }
 
 .key {
@@ -82,4 +81,23 @@ body {
 
 .key.wide {
   width: 85px;
+}
+
+/* 📱 mobile optimization */
+@media (max-width: 600px) {
+  .key {
+    width: 30px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .key.wide {
+    width: 70px;
+  }
+}
+
+/* ⌨️ physical key highlight */
+.key.active {
+  transform: scale(0.92);
+  background: #4caf50;
 }
