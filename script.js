@@ -15,7 +15,9 @@ let animationFrame;
 let highScore = localStorage.getItem("highScore") || 0;
 document.getElementById("highScore").innerText = highScore;
 
-/* SENTENCES */
+/* ⭐ OPTIONAL UPGRADE: real WPM tracking */
+let wpmSnapshots = [];
+
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day to improve speed",
@@ -46,9 +48,10 @@ function startGame() {
       Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
 
-  /* RESET GRAPH */
+  /* RESET GRAPH DATA */
   wpmHistory = [];
   smoothHistory = [];
+  wpmSnapshots = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(animateGraph);
@@ -60,7 +63,7 @@ function updateTyped() {
   check();
 }
 
-/* CHECK HIGHLIGHTING + ACCURACY */
+/* CHECK + WORD HIGHLIGHT + ACCURACY */
 function check() {
   const words = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
@@ -115,7 +118,7 @@ function updateAccuracy() {
   document.getElementById("accuracy").innerText = acc;
 }
 
-/* FINISH GAME */
+/* FINISH */
 function finishGame() {
   clearInterval(timer);
   cancelAnimationFrame(animationFrame);
@@ -133,13 +136,13 @@ function finishGame() {
   }
 }
 
-/* GRAPH ANIMATION */
+/* GRAPH LOOP */
 function animateGraph() {
   drawGraph();
   animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* SMOOTH GRAPH */
+/* 🔥 FIXED + OPTIONAL UPGRADE GRAPH */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
@@ -151,22 +154,31 @@ function drawGraph() {
   const time = (Date.now() - startTime) / 1000;
   if (time < 0.5) return;
 
-  const chars = typedText.length;
-  const wpm = Math.round((chars / 5) / (time / 60));
+  /* ⭐ REAL MONKEYTYPE METHOD (snapshots every frame) */
+  const wordsTyped = typedText.trim().split(" ").length;
+  const wpm = Math.round((wordsTyped / time) * 60);
 
-  wpmHistory.push(wpm);
-  if (wpmHistory.length > 120) wpmHistory.shift();
+  /* store snapshots */
+  wpmSnapshots.push(wpm);
 
-  const last = smoothHistory.at(-1) || wpm;
-  const smooth = last + (wpm - last) * 0.2;
+  if (wpmSnapshots.length > 120) wpmSnapshots.shift();
+
+  /* smoothing */
+  const last = smoothHistory.length
+    ? smoothHistory[smoothHistory.length - 1]
+    : wpm;
+
+  const smooth = last + (wpm - last) * 0.35;
 
   smoothHistory.push(smooth);
+
   if (smoothHistory.length > 120) smoothHistory.shift();
 
   if (smoothHistory.length < 2) return;
 
   const max = Math.max(...smoothHistory, 50);
 
+  /* draw line */
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
   ctx.lineWidth = 2;
@@ -179,6 +191,12 @@ function drawGraph() {
   });
 
   ctx.stroke();
+
+  /* ⭐ OPTIONAL UPGRADE: glow effect */
+  ctx.shadowColor = "#4caf50";
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 }
 
 /* KEYBOARD */
