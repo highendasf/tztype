@@ -1,95 +1,176 @@
+console.log("SCRIPT LOADED ✔");
+
+let typedText = "";
+let currentSentence = "";
+let startTime;
+let timer;
+
+let capsLock = false;
+let highScore = localStorage.getItem("highScore") || 0;
+
+window.onload = () => {
+  document.getElementById("highScore").innerText = highScore;
+
+  // ✅ FORCE CHECK KEYBOARD EXISTS
+  const kb = document.getElementById("keyboard");
+  if (!kb) {
+    console.error("❌ Keyboard DIV missing!");
+  } else {
+    console.log("✅ Keyboard found");
+  }
+};
+
 const sentences = [
   "The quick brown fox jumps over the lazy dog",
   "Typing fast takes practice and patience",
-  "JavaScript makes websites interactive",
-  "Practice every day to improve your speed",
-  "Never stop learning new skills",
-  "Coding is like solving puzzles",
-  "Small steps lead to big progress",
-  "Focus and accuracy are more important than speed",
-  "Errors help you become a better programmer",
-  "Build projects to learn faster",
-  "Consistency beats motivation",
-  "Stay calm and keep typing",
-  "Every expert was once a beginner",
-  "Debugging is part of programming",
-  "Good code is simple code"
+  "Coding improves with practice every day",
+  "Focus and accuracy matter more than speed"
 ];
-
-let startTime, timerInterval, currentSentence = "";
-
-const input = document.getElementById("input");
-
-// ✅ Attach ONCE only (fixes duplicate event bug)
-input.oninput = checkTyping;
-
-// ✅ Prevent Enter key (mobile fix)
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-  }
-});
 
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
-  const sentenceEl = document.getElementById("sentence");
 
-  // 🧩 Split sentence into letters
-  sentenceEl.innerHTML = currentSentence
-    .split("")
-    .map(letter => `<span>${letter}</span>`)
-    .join("");
+  document.getElementById("sentence").innerHTML =
+    currentSentence.split("").map(c => `<span>${c}</span>`).join("");
 
-  input.value = "";
-  input.disabled = false;
-  input.focus();
+  typedText = "";
+  updateTyped();
 
-  startTime = new Date().getTime();
+  startTime = Date.now();
+  clearInterval(timer);
 
-  clearInterval(timerInterval);
-  timerInterval = setInterval(updateTime, 1000);
+  timer = setInterval(() => {
+    document.getElementById("time").innerText =
+      Math.floor((Date.now() - startTime) / 1000);
+  }, 1000);
 }
 
-function updateTime() {
-  const seconds = Math.floor((new Date().getTime() - startTime) / 1000);
-  document.getElementById("time").innerText = seconds;
+function updateTyped() {
+  document.getElementById("typed").innerText = typedText;
+  check();
 }
 
-function checkTyping() {
-  const value = input.value;
+function check() {
   const letters = document.querySelectorAll("#sentence span");
 
-  let correct = true;
+  letters.forEach((span, i) => {
+    span.classList.remove("correct", "wrong");
 
-  letters.forEach((span, index) => {
-    const typedChar = value[index];
+    if (!typedText[i]) return;
 
-    if (typedChar == null) {
-      span.classList.remove("correct", "wrong");
-      correct = false;
-    } 
-    else if (typedChar === span.innerText) {
+    if (typedText[i] === span.innerText) {
       span.classList.add("correct");
-      span.classList.remove("wrong");
-    } 
-    else {
+    } else {
       span.classList.add("wrong");
-      span.classList.remove("correct");
-      correct = false;
     }
   });
 
-  // ✅ Finish check (fixed)
-  if (value.trim() === currentSentence) {
-    clearInterval(timerInterval);
-
-    const totalTime = (new Date().getTime() - startTime) / 1000;
-    const wordCount = currentSentence.split(" ").length;
-    const wpm = Math.round((wordCount / totalTime) * 60);
-
-    document.getElementById("wpm").innerText = wpm;
+  if (typedText === currentSentence) {
+    finish();
   }
-
-  // 📱 Keep cursor visible on mobile
-  input.scrollTop = input.scrollHeight;
 }
+
+function finish() {
+  clearInterval(timer);
+
+  const time = (Date.now() - startTime) / 1000;
+  const words = currentSentence.split(" ").length;
+  const wpm = Math.round((words / time) * 60);
+
+  document.getElementById("wpm").innerText = wpm;
+
+  if (wpm > highScore) {
+    highScore = wpm;
+    localStorage.setItem("highScore", highScore);
+    document.getElementById("highScore").innerText = highScore;
+  }
+}
+
+/* ⌨️ KEYBOARD (FORCED RENDER SAFE) */
+const layout = [
+  ["Q","W","E","R","T","Y","U","I","O","P"],
+  ["A","S","D","F","G","H","J","K","L"],
+  ["Z","X","C","V","B","N","M"]
+];
+
+const keyboard = document.getElementById("keyboard");
+
+// ✅ HARD CHECK (fixes "not showing" bug)
+if (keyboard) {
+
+  layout.forEach(row => {
+    const rowDiv = document.createElement("div");
+    rowDiv.className = "row";
+
+    row.forEach(letter => {
+      const key = document.createElement("div");
+      key.className = "key";
+      key.innerText = letter;
+
+      key.onclick = () => {
+        const char = capsLock ? letter.toUpperCase() : letter.toLowerCase();
+        typedText += char;
+        updateTyped();
+      };
+
+      rowDiv.appendChild(key);
+    });
+
+    keyboard.appendChild(rowDiv);
+  });
+
+  // bottom row
+  const bottom = document.createElement("div");
+  bottom.className = "row";
+
+  const space = document.createElement("div");
+  space.className = "key wide";
+  space.innerText = "SPACE";
+  space.onclick = () => {
+    typedText += " ";
+    updateTyped();
+  };
+
+  const back = document.createElement("div");
+  back.className = "key wide";
+  back.innerText = "⌫";
+  back.onclick = () => {
+    typedText = typedText.slice(0, -1);
+    updateTyped();
+  };
+
+  const caps = document.createElement("div");
+  caps.className = "key wide";
+  caps.innerText = "CAPS";
+
+  caps.onclick = () => {
+    capsLock = !capsLock;
+    caps.innerText = capsLock ? "CAPS ON" : "CAPS OFF";
+  };
+
+  bottom.appendChild(space);
+  bottom.appendChild(back);
+  bottom.appendChild(caps);
+
+  keyboard.appendChild(bottom);
+
+} else {
+  console.error("Keyboard not found in DOM!");
+}
+
+/* physical keyboard */
+document.addEventListener("keydown", (e) => {
+  if (!currentSentence) return;
+
+  if (e.key === "Backspace") {
+    typedText = typedText.slice(0, -1);
+    updateTyped();
+  } else if (e.key === " ") {
+    e.preventDefault();
+    typedText += " ";
+    updateTyped();
+  } else if (e.key.length === 1) {
+    typedText += capsLock ? e.key.toUpperCase() : e.key.toLowerCase();
+    updateTyped();
+  }
+});
