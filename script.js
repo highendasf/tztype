@@ -1,23 +1,22 @@
 console.log("Typing game loaded ✔");
 
+/* ===================== STATE ===================== */
 let typedText = "";
 let currentSentence = "";
-let startTime;
-let timer;
+let startTime = null;
+let timer = null;
 
 let correctChars = 0;
 let totalChars = 0;
 
 let wpmHistory = [];
 let smoothHistory = [];
-let animationFrame;
+let animationFrame = null;
 
 let highScore = localStorage.getItem("highScore") || 0;
 document.getElementById("highScore").innerText = highScore;
 
-/* ⭐ OPTIONAL UPGRADE: real WPM tracking */
-let wpmSnapshots = [];
-
+/* ===================== SENTENCES ===================== */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day to improve speed",
@@ -26,19 +25,15 @@ const sentences = [
   "never stop learning new skills"
 ];
 
-/* START GAME */
+/* ===================== START GAME ===================== */
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
 
-  document.getElementById("sentence").innerHTML =
-    currentSentence.split(" ").map(word =>
-      `<span class="word">${
-        word.split("").map(c => `<span>${c}</span>`).join("")
-      }</span>`
-    ).join(" ");
-
   typedText = "";
   updateTyped();
+
+  correctChars = 0;
+  totalChars = 0;
 
   startTime = Date.now();
 
@@ -48,22 +43,21 @@ function startGame() {
       Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
 
-  /* RESET GRAPH DATA */
+  /* reset graph */
   wpmHistory = [];
   smoothHistory = [];
-  wpmSnapshots = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* UPDATE TEXT */
+/* ===================== UPDATE TEXT ===================== */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
   check();
 }
 
-/* CHECK + WORD HIGHLIGHT + ACCURACY */
+/* ===================== CHECK ===================== */
 function check() {
   const words = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
@@ -81,7 +75,6 @@ function check() {
       letter.classList.remove("correct", "wrong");
 
       const char = typedWord[j];
-
       if (!char) return;
 
       if (char === letter.innerText) {
@@ -109,7 +102,7 @@ function check() {
   if (typedText === currentSentence) finishGame();
 }
 
-/* ACCURACY */
+/* ===================== ACCURACY ===================== */
 function updateAccuracy() {
   let acc = totalChars === 0
     ? 100
@@ -118,7 +111,7 @@ function updateAccuracy() {
   document.getElementById("accuracy").innerText = acc;
 }
 
-/* FINISH */
+/* ===================== FINISH ===================== */
 function finishGame() {
   clearInterval(timer);
   cancelAnimationFrame(animationFrame);
@@ -136,34 +129,35 @@ function finishGame() {
   }
 }
 
-/* GRAPH LOOP */
+/* ===================== GRAPH LOOP ===================== */
 function animateGraph() {
   drawGraph();
   animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* 🔥 FIXED + OPTIONAL UPGRADE GRAPH */
+/* ===================== GRAPH ===================== */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
+
+  /* FIX CANVAS SIZE */
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 150;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (!startTime) return;
 
   const time = (Date.now() - startTime) / 1000;
-  if (time < 0.5) return;
+  if (time < 1) return;
 
-  /* ⭐ REAL MONKEYTYPE METHOD (snapshots every frame) */
+  /* REAL WPM */
   const wordsTyped = typedText.trim().split(" ").length;
-  const wpm = Math.round((wordsTyped / time) * 60);
+  const wpm = Math.max(0, Math.round((wordsTyped / time) * 60));
 
-  /* store snapshots */
-  wpmSnapshots.push(wpm);
+  wpmHistory.push(wpm);
+  if (wpmHistory.length > 120) wpmHistory.shift();
 
-  if (wpmSnapshots.length > 120) wpmSnapshots.shift();
-
-  /* smoothing */
   const last = smoothHistory.length
     ? smoothHistory[smoothHistory.length - 1]
     : wpm;
@@ -171,14 +165,12 @@ function drawGraph() {
   const smooth = last + (wpm - last) * 0.35;
 
   smoothHistory.push(smooth);
-
   if (smoothHistory.length > 120) smoothHistory.shift();
 
   if (smoothHistory.length < 2) return;
 
   const max = Math.max(...smoothHistory, 50);
 
-  /* draw line */
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
   ctx.lineWidth = 2;
@@ -191,15 +183,9 @@ function drawGraph() {
   });
 
   ctx.stroke();
-
-  /* ⭐ OPTIONAL UPGRADE: glow effect */
-  ctx.shadowColor = "#4caf50";
-  ctx.shadowBlur = 10;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
 }
 
-/* KEYBOARD */
+/* ===================== KEYBOARD ===================== */
 const layout = [
   ["Q","W","E","R","T","Y","U","I","O","P"],
   ["A","S","D","F","G","H","J","K","L"],
@@ -248,20 +234,41 @@ bottom.className = "row";
 
 keyboard.appendChild(bottom);
 
-/* PHYSICAL KEYBOARD */
+/* ===================== KEYBOARD CONTROL ===================== */
 document.addEventListener("keydown", e => {
   if (!currentSentence) return;
 
-  if (e.key === "Backspace") {
-    typedText = typedText.slice(0, -1);
-  }
-  else if (e.key === " ") {
+  const finished = typedText === currentSentence;
+
+  /* SPACE = START / CONTINUE / RESTART */
+  if (e.key === " ") {
     e.preventDefault();
+
+    if (!startTime) {
+      startGame();
+      return;
+    }
+
+    if (finished) {
+      startGame();
+      return;
+    }
+
     typedText += " ";
-  }
-  else if (e.key.length === 1) {
-    typedText += e.key.toLowerCase();
+    updateTyped();
+    return;
   }
 
-  updateTyped();
+  /* BACKSPACE */
+  if (e.key === "Backspace") {
+    typedText = typedText.slice(0, -1);
+    updateTyped();
+    return;
+  }
+
+  /* LETTERS */
+  if (e.key.length === 1) {
+    typedText += e.key.toLowerCase();
+    updateTyped();
+  }
 });
