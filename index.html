@@ -3,34 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Typing Game</title>
-
+  <title>Typing</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <div class="app">
 
-  <div class="container">
-    <h1>⌨️ Typing Game</h1>
-
-    <p id="sentence"></p>
-
-    <div id="typed"></div>
-
-    <div class="stats">
-      <span>Time: <span id="time">0</span>s</span>
-      <span>WPM: <span id="wpm">0</span></span>
-      <span>High Score: <span id="highScore">0</span></span>
+    <div class="top">
+      <span><b id="wpm">0</b> wpm</span>
+      <span><b id="time">0</b>s</span>
+      <span>acc: <b id="accuracy">100</b>%</span>
+      <span>best: <b id="highScore">0</b></span>
     </div>
 
-    <button onclick="startGame()">Start</button>
+    <div id="sentence" class="sentence"></div>
+    <div id="typed" class="typed"></div>
 
-    <!-- ✅ IMPORTANT: keyboard must exist -->
+    <button onclick="startGame()">start</button>
+
+    <canvas id="wpmChart" width="600" height="150"></canvas>
+
     <div id="keyboard"></div>
 
   </div>
 
   <script src="script.js"></script>
-
 </body>
 </html>
