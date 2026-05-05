@@ -1,5 +1,3 @@
-console.log("SCRIPT LOADED ✔");
-
 let typedText = "";
 let currentSentence = "";
 let startTime;
@@ -8,17 +6,15 @@ let timer;
 let capsLock = false;
 let highScore = localStorage.getItem("highScore") || 0;
 
-window.onload = () => {
-  document.getElementById("highScore").innerText = highScore;
+let correctChars = 0;
+let totalChars = 0;
 
-  // ✅ FORCE CHECK KEYBOARD EXISTS
-  const kb = document.getElementById("keyboard");
-  if (!kb) {
-    console.error("❌ Keyboard DIV missing!");
-  } else {
-    console.log("✅ Keyboard found");
-  }
-};
+let wpmHistory = [];
+let smoothHistory = [];
+let graphTimer;
+let animationFrame;
+
+document.getElementById("highScore").innerText = highScore;
 
 const sentences = [
   "The quick brown fox jumps over the lazy dog",
@@ -31,18 +27,30 @@ function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
 
   document.getElementById("sentence").innerHTML =
-    currentSentence.split("").map(c => `<span>${c}</span>`).join("");
+    currentSentence.split(" ").map(word =>
+      `<span class="word">${word.split("").map(c => `<span>${c}</span>`).join("")}</span>`
+    ).join(" ");
 
   typedText = "";
   updateTyped();
 
   startTime = Date.now();
-  clearInterval(timer);
 
+  clearInterval(timer);
   timer = setInterval(() => {
     document.getElementById("time").innerText =
       Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
+
+  // graph start
+  wpmHistory = [];
+  smoothHistory = [];
+
+  cancelAnimationFrame(animationFrame);
+  animationFrame = requestAnimationFrame(animateGraph);
+
+  clearInterval(graphTimer);
+  graphTimer = setInterval(updateGraph, 1000);
 }
 
 function updateTyped() {
@@ -51,27 +59,61 @@ function updateTyped() {
 }
 
 function check() {
-  const letters = document.querySelectorAll("#sentence span");
+  const words = document.querySelectorAll(".word");
+  const typedWords = typedText.split(" ");
 
-  letters.forEach((span, i) => {
-    span.classList.remove("correct", "wrong");
+  correctChars = 0;
+  totalChars = typedText.length;
 
-    if (!typedText[i]) return;
+  words.forEach((wordSpan, i) => {
+    const letters = wordSpan.querySelectorAll("span");
+    const typedWord = typedWords[i] || "";
 
-    if (typedText[i] === span.innerText) {
-      span.classList.add("correct");
-    } else {
-      span.classList.add("wrong");
+    let correctWord = true;
+
+    letters.forEach((letterSpan, j) => {
+      letterSpan.classList.remove("correct", "wrong");
+
+      const char = typedWord[j];
+
+      if (!char) return;
+
+      if (char === letterSpan.innerText) {
+        letterSpan.classList.add("correct");
+        correctChars++;
+      } else {
+        letterSpan.classList.add("wrong");
+        correctWord = false;
+      }
+    });
+
+    wordSpan.classList.remove("word-correct", "word-wrong");
+
+    if (!typedWord) return;
+
+    if (typedWord === wordSpan.innerText) {
+      wordSpan.classList.add("word-correct");
+    } else if (!correctWord || typedWord.length >= wordSpan.innerText.length) {
+      wordSpan.classList.add("word-wrong");
     }
   });
 
-  if (typedText === currentSentence) {
-    finish();
-  }
+  updateAccuracy();
+
+  if (typedText === currentSentence) finishGame();
 }
 
-function finish() {
+function updateAccuracy() {
+  let acc = totalChars === 0 ? 100 :
+    Math.round((correctChars / totalChars) * 100);
+
+  document.getElementById("accuracy").innerText = acc;
+}
+
+function finishGame() {
   clearInterval(timer);
+  clearInterval(graphTimer);
+  cancelAnimationFrame(animationFrame);
 
   const time = (Date.now() - startTime) / 1000;
   const words = currentSentence.split(" ").length;
@@ -86,7 +128,48 @@ function finish() {
   }
 }
 
-/* ⌨️ KEYBOARD (FORCED RENDER SAFE) */
+/* GRAPH */
+function updateGraph() {
+  const time = (Date.now() - startTime) / 1000;
+  const words = typedText.trim().split(" ").length;
+  const wpm = Math.round((words / time) * 60);
+
+  wpmHistory.push(wpm);
+
+  const last = smoothHistory.at(-1) || wpm;
+  smoothHistory.push(last + (wpm - last) * 0.3);
+}
+
+function animateGraph() {
+  drawGraph();
+  animationFrame = requestAnimationFrame(animateGraph);
+}
+
+function drawGraph() {
+  const canvas = document.getElementById("wpmChart");
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (smoothHistory.length < 2) return;
+
+  const max = Math.max(...smoothHistory, 50);
+
+  ctx.beginPath();
+  ctx.strokeStyle = "#4caf50";
+  ctx.lineWidth = 2;
+
+  smoothHistory.forEach((v, i) => {
+    const x = (i / (smoothHistory.length - 1)) * canvas.width;
+    const y = canvas.height - (v / max) * canvas.height;
+
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+}
+
+/* KEYBOARD */
 const layout = [
   ["Q","W","E","R","T","Y","U","I","O","P"],
   ["A","S","D","F","G","H","J","K","L"],
@@ -95,82 +178,59 @@ const layout = [
 
 const keyboard = document.getElementById("keyboard");
 
-// ✅ HARD CHECK (fixes "not showing" bug)
-if (keyboard) {
+layout.forEach(row => {
+  const rowDiv = document.createElement("div");
+  rowDiv.className = "row";
 
-  layout.forEach(row => {
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "row";
+  row.forEach(letter => {
+    const key = document.createElement("div");
+    key.className = "key";
+    key.innerText = letter;
 
-    row.forEach(letter => {
-      const key = document.createElement("div");
-      key.className = "key";
-      key.innerText = letter;
+    key.onclick = () => {
+      typedText += capsLock ? letter : letter.toLowerCase();
+      updateTyped();
+    };
 
-      key.onclick = () => {
-        const char = capsLock ? letter.toUpperCase() : letter.toLowerCase();
-        typedText += char;
-        updateTyped();
-      };
-
-      rowDiv.appendChild(key);
-    });
-
-    keyboard.appendChild(rowDiv);
+    rowDiv.appendChild(key);
   });
 
-  // bottom row
-  const bottom = document.createElement("div");
-  bottom.className = "row";
+  keyboard.appendChild(rowDiv);
+});
 
-  const space = document.createElement("div");
-  space.className = "key wide";
-  space.innerText = "SPACE";
-  space.onclick = () => {
-    typedText += " ";
+const bottom = document.createElement("div");
+bottom.className = "row";
+
+["SPACE","⌫","CAPS"].forEach(type => {
+  const key = document.createElement("div");
+  key.className = "key wide";
+  key.innerText = type;
+
+  key.onclick = () => {
+    if (type === "SPACE") typedText += " ";
+    if (type === "⌫") typedText = typedText.slice(0,-1);
+    if (type === "CAPS") capsLock = !capsLock;
+
     updateTyped();
   };
 
-  const back = document.createElement("div");
-  back.className = "key wide";
-  back.innerText = "⌫";
-  back.onclick = () => {
-    typedText = typedText.slice(0, -1);
-    updateTyped();
-  };
+  bottom.appendChild(key);
+});
 
-  const caps = document.createElement("div");
-  caps.className = "key wide";
-  caps.innerText = "CAPS";
+keyboard.appendChild(bottom);
 
-  caps.onclick = () => {
-    capsLock = !capsLock;
-    caps.innerText = capsLock ? "CAPS ON" : "CAPS OFF";
-  };
-
-  bottom.appendChild(space);
-  bottom.appendChild(back);
-  bottom.appendChild(caps);
-
-  keyboard.appendChild(bottom);
-
-} else {
-  console.error("Keyboard not found in DOM!");
-}
-
-/* physical keyboard */
+/* PHYSICAL KEYBOARD */
 document.addEventListener("keydown", (e) => {
   if (!currentSentence) return;
 
-  if (e.key === "Backspace") {
-    typedText = typedText.slice(0, -1);
-    updateTyped();
-  } else if (e.key === " ") {
+  if (e.key === "Backspace") typedText = typedText.slice(0,-1);
+  else if (e.key === " ") {
     e.preventDefault();
     typedText += " ";
-    updateTyped();
-  } else if (e.key.length === 1) {
-    typedText += capsLock ? e.key.toUpperCase() : e.key.toLowerCase();
-    updateTyped();
   }
+  else if (e.key.length === 1) {
+    typedText += capsLock ? e.key.toUpperCase() : e.key.toLowerCase();
+  }
+
+  updateTyped();
 });
