@@ -3,16 +3,15 @@ body {
   font-family: monospace;
   background: #0f0f14;
   color: #aaa;
+  overscroll-behavior-y: contain;
 }
 
-/* MAIN APP */
 .app {
   max-width: 750px;
   margin: 40px auto;
   padding: 20px;
 }
 
-/* TOP STATS */
 .top {
   display: flex;
   justify-content: space-between;
@@ -21,61 +20,54 @@ body {
   font-size: 14px;
 }
 
-/* SENTENCE */
 .sentence {
   font-size: 24px;
   line-height: 1.6;
   margin-bottom: 10px;
+  min-height: 80px;
 }
 
-/* WORD STATES */
-.word {
-  opacity: 0.3;
+/* Base state for letters in the sentence */
+.sentence span {
+  opacity: 0.5;
+  transition: all 0.1s;
 }
 
-.word.word-correct {
+.sentence span.correct {
   opacity: 1;
   color: #4caf50;
 }
 
-.word.word-wrong {
+.sentence span.wrong {
   opacity: 1;
   color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
 }
 
-/* LETTER COLORS */
-.correct {
-  color: #4caf50;
-}
-
-.wrong {
-  color: #ff4d4d;
-}
-
-/* TYPED TEXT */
 .typed {
   height: 30px;
   border-bottom: 2px solid #444;
   margin-bottom: 15px;
   font-size: 18px;
+  color: #4caf50;
 }
 
-/* BUTTON */
 button {
   margin-bottom: 15px;
-  padding: 8px 14px;
+  padding: 10px 20px;
   background: #1c1c25;
-  color: #aaa;
-  border: none;
+  color: #4caf50;
+  border: 1px solid #4caf50;
   border-radius: 6px;
   cursor: pointer;
+  font-family: monospace;
 }
 
 button:hover {
-  background: #2a2a38;
+  background: #4caf50;
+  color: #0f0f14;
 }
 
-/* GRAPH CANVAS */
 canvas {
   width: 100%;
   height: 150px;
@@ -85,12 +77,12 @@ canvas {
   display: block;
 }
 
-/* KEYBOARD */
 #keyboard {
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  margin-top: 20px;
 }
 
 .row {
@@ -98,7 +90,6 @@ canvas {
   gap: 6px;
 }
 
-/* KEYS */
 .key {
   width: 38px;
   height: 44px;
@@ -106,46 +97,16 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  cursor: pointer;
-
-  user-select: none;
-  transition: transform 0.08s ease, background 0.15s ease;
+  border-radius: 6px;
+  font-size: 14px;
+  text-transform: uppercase;
+  transition: background 0.1s;
 }
 
-/* PRESS ANIMATION */
-.key:active {
-  transform: scale(0.92);
-  background: #4caf50;
-}
+.key.wide { width: 80px; }
 
-/* HOVER */
-.key:hover {
-  background: #2a2a38;
-}
-
-/* WIDE KEYS */
-.key.wide {
-  width: 90px;
-}
-
-/* MOBILE FIX */
 @media (max-width: 600px) {
-  .sentence {
-    font-size: 20px;
-  }
-
-  .key {
-    width: 32px;
-    height: 40px;
-  }
-
-  .key.wide {
-    width: 70px;
-  }
-
-  .app {
-    margin: 20px auto;
-    padding: 15px;
-  }
+  .sentence { font-size: 18px; }
+  .key { width: 30px; height: 38px; font-size: 12px; }
+  .key.wide { width: 60px; }
 }
