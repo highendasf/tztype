@@ -1,14 +1,8 @@
-function log(msg) {
-  console.log(msg);
-}
-
-/* ===================== STATE ===================== */
+/* ===================== STATE & CONFIG ===================== */
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
 let timer = null;
-let correctChars = 0;
-let totalChars = 0;
 let wpmHistory = [];
 let smoothHistory = [];
 let animationFrame = null;
@@ -22,21 +16,42 @@ const sentences = [
   "never stop learning new skills"
 ];
 
-/* ===================== INIT ===================== */
-window.onload = () => {
+/* ===================== CORE INITIALIZATION ===================== */
+// This ensures the keyboard is built only after the HTML is fully loaded
+function init() {
+  console.log("Initializing Game...");
   createKeyboard();
+  
   const hs = document.getElementById("highScore");
   if (hs) hs.innerText = highScore;
-  log("DOM READY ✔");
-};
 
+  // Set initial sentence
+  renderSentence("Press SPACE to start");
+}
+
+// Robust way to wait for the DOM
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
+/* ===================== KEYBOARD GENERATOR ===================== */
 function createKeyboard() {
   const kb = document.getElementById("keyboard");
+  if (!kb) {
+    console.error("Could not find #keyboard div!");
+    return;
+  }
+  
+  kb.innerHTML = ""; // Clear existing
+
   const rows = [
     ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
     ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
     ["z", "x", "c", "v", "b", "n", "m", "Backspace"]
   ];
+
   rows.forEach(row => {
     const rowDiv = document.createElement("div");
     rowDiv.className = "row";
@@ -44,20 +59,22 @@ function createKeyboard() {
       const div = document.createElement("div");
       div.className = "key" + (key === "Backspace" ? " wide" : "");
       div.innerText = key === "Backspace" ? "⌫" : key;
+      // Store lower-case for easy matching
       div.setAttribute("data-key", key.toLowerCase());
       rowDiv.appendChild(div);
     });
     kb.appendChild(rowDiv);
   });
+  console.log("Keyboard Generated ✔");
 }
 
-/* ===================== GAME ENGINE ===================== */
+/* ===================== GAME LOGIC ===================== */
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
   renderSentence(currentSentence);
   
   typedText = "";
-  updateTyped();
+  updateTypedDisplay();
   startTime = Date.now();
   wpmHistory = [];
   smoothHistory = [];
@@ -70,11 +87,11 @@ function startGame() {
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(animateGraph);
-  log("GAME STARTED ✔");
 }
 
 function renderSentence(text) {
   const el = document.getElementById("sentence");
+  if (!el) return;
   el.innerHTML = "";
   text.split("").forEach(char => {
     const span = document.createElement("span");
@@ -83,36 +100,33 @@ function renderSentence(text) {
   });
 }
 
-function updateTyped() {
+function updateTypedDisplay() {
   const el = document.getElementById("typed");
   if (el) el.innerText = typedText;
-  check();
-}
-
-function check() {
+  
+  // Check characters
   const spans = document.querySelectorAll("#sentence span");
-  correctChars = 0;
-  totalChars = typedText.length;
+  let correctCount = 0;
 
   spans.forEach((span, i) => {
     span.classList.remove("correct", "wrong");
     if (typedText[i] == null) return;
     if (typedText[i] === span.innerText) {
       span.classList.add("correct");
-      correctChars++;
+      correctCount++;
     } else {
       span.classList.add("wrong");
     }
   });
 
-  updateAccuracy();
-  if (typedText === currentSentence && currentSentence !== "") finishGame();
-}
-
-function updateAccuracy() {
+  // Accuracy
   const accEl = document.getElementById("accuracy");
-  const acc = totalChars === 0 ? 100 : Math.round((correctChars / totalChars) * 100);
-  if (accEl) accEl.innerText = acc;
+  if (accEl) {
+    const acc = typedText.length === 0 ? 100 : Math.round((correctCount / typedText.length) * 100);
+    accEl.innerText = acc;
+  }
+
+  if (typedText === currentSentence && currentSentence !== "") finishGame();
 }
 
 function finishGame() {
@@ -129,61 +143,61 @@ function finishGame() {
     localStorage.setItem("highScore", highScore);
     document.getElementById("highScore").innerText = highScore;
   }
-  log("GAME FINISHED ✔");
 }
 
-/* ===================== GRAPH ===================== */
+/* ===================== GRAPH RENDERING ===================== */
 function animateGraph() {
-  drawGraph();
-  animationFrame = requestAnimationFrame(animateGraph);
-}
-
-function drawGraph() {
   const canvas = document.getElementById("wpmChart");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
+
   if (canvas.width !== canvas.offsetWidth) {
     canvas.width = canvas.offsetWidth;
     canvas.height = 150;
   }
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!startTime || typedText.length < 2) return;
+  if (startTime && typedText.length > 2) {
+    const time = (Date.now() - startTime) / 1000;
+    const wordsTyped = typedText.trim().split(/\s+/).length;
+    const wpm = Math.max(0, Math.round((wordsTyped / time) * 60));
 
-  const time = (Date.now() - startTime) / 1000;
-  const wordsTyped = typedText.trim().split(/\s+/).length;
-  const wpm = Math.max(0, Math.round((wordsTyped / time) * 60));
+    wpmHistory.push(wpm);
+    if (wpmHistory.length > 100) wpmHistory.shift();
 
-  wpmHistory.push(wpm);
-  if (wpmHistory.length > 100) wpmHistory.shift();
+    const last = smoothHistory.length ? smoothHistory[smoothHistory.length - 1] : wpm;
+    const smooth = last + (wpm - last) * 0.2;
+    smoothHistory.push(smooth);
+    if (smoothHistory.length > 100) smoothHistory.shift();
 
-  const last = smoothHistory.length ? smoothHistory[smoothHistory.length - 1] : wpm;
-  const smooth = last + (wpm - last) * 0.2;
-  smoothHistory.push(smooth);
-  if (smoothHistory.length > 100) smoothHistory.shift();
-
-  const maxWpm = Math.max(...smoothHistory, 60);
-  ctx.beginPath();
-  ctx.strokeStyle = "#4caf50";
-  ctx.lineWidth = 3;
-  smoothHistory.forEach((v, i) => {
-    const x = (i / (smoothHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / maxWpm) * (canvas.height - 20) - 10;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
+    const maxWpm = Math.max(...smoothHistory, 60);
+    ctx.beginPath();
+    ctx.strokeStyle = "#4caf50";
+    ctx.lineWidth = 3;
+    smoothHistory.forEach((v, i) => {
+      const x = (i / (smoothHistory.length - 1)) * canvas.width;
+      const y = canvas.height - (v / maxWpm) * (canvas.height - 20) - 10;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+  animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* ===================== INPUT ===================== */
+/* ===================== INPUT HANDLING ===================== */
 document.addEventListener("keydown", e => {
   const key = e.key;
-  const vKey = document.querySelector(`[data-key="${key.toLowerCase()}"]`);
   
+  // Visual Keyboard Highlight
+  const vKey = document.querySelector(`[data-key="${key.toLowerCase()}"]`);
   if (vKey) {
     vKey.style.background = "#4caf50";
     vKey.style.color = "#0f0f14";
     setTimeout(() => { vKey.style.background = ""; vKey.style.color = ""; }, 100);
   }
 
+  // Game Control
   if (key === " " && (!startTime || typedText === currentSentence)) {
     e.preventDefault();
     startGame();
@@ -197,5 +211,5 @@ document.addEventListener("keydown", e => {
   } else if (key.length === 1) {
     typedText += key;
   }
-  updateTyped();
+  updateTypedDisplay();
 });
