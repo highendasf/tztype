@@ -1,4 +1,6 @@
-console.log("Typing game loaded ✔");
+function log(msg) {
+  console.log(msg);
+}
 
 /* ===================== STATE ===================== */
 let typedText = "";
@@ -24,10 +26,15 @@ const sentences = [
   "never stop learning new skills"
 ];
 
-/* ===================== SAFE INIT (IMPORTANT FIX) ===================== */
+/* ===================== SAFE INIT ===================== */
 window.onload = () => {
-  const highScoreEl = document.getElementById("highScore");
-  if (highScoreEl) highScoreEl.innerText = highScore;
+  const hs = document.getElementById("highScore");
+  const typed = document.getElementById("typed");
+
+  if (hs) hs.innerText = highScore;
+  if (typed) typed.innerText = "";
+
+  log("DOM READY ✔");
 };
 
 /* ===================== START GAME ===================== */
@@ -44,9 +51,8 @@ function startGame() {
 
   clearInterval(timer);
   timer = setInterval(() => {
-    const timeEl = document.getElementById("time");
-    if (timeEl)
-      timeEl.innerText = Math.floor((Date.now() - startTime) / 1000);
+    const t = document.getElementById("time");
+    if (t) t.innerText = Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
 
   wpmHistory = [];
@@ -54,12 +60,14 @@ function startGame() {
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(animateGraph);
+
+  log("GAME STARTED ✔");
 }
 
 /* ===================== UPDATE ===================== */
 function updateTyped() {
-  const typedEl = document.getElementById("typed");
-  if (typedEl) typedEl.innerText = typedText;
+  const el = document.getElementById("typed");
+  if (el) el.innerText = typedText;
 
   check();
 }
@@ -139,6 +147,8 @@ function finishGame() {
     const hs = document.getElementById("highScore");
     if (hs) hs.innerText = highScore;
   }
+
+  log("GAME FINISHED ✔");
 }
 
 /* ===================== GRAPH ===================== */
