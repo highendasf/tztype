@@ -5,25 +5,30 @@ body {
   color: #aaa;
 }
 
+/* MAIN APP */
 .app {
-  max-width: 700px;
+  max-width: 750px;
   margin: 40px auto;
   padding: 20px;
 }
 
+/* TOP STATS */
 .top {
   display: flex;
   justify-content: space-between;
   margin-bottom: 15px;
   color: #777;
+  font-size: 14px;
 }
 
+/* SENTENCE */
 .sentence {
   font-size: 24px;
   line-height: 1.6;
   margin-bottom: 10px;
 }
 
+/* WORD STATES */
 .word {
   opacity: 0.3;
 }
@@ -38,27 +43,49 @@ body {
   color: #ff4d4d;
 }
 
-.correct { color: #4caf50; }
-.wrong { color: #ff4d4d; }
+/* LETTER COLORS */
+.correct {
+  color: #4caf50;
+}
 
+.wrong {
+  color: #ff4d4d;
+}
+
+/* TYPED TEXT */
 .typed {
   height: 30px;
   border-bottom: 2px solid #444;
   margin-bottom: 15px;
+  font-size: 18px;
 }
 
+/* BUTTON */
 button {
   margin-bottom: 15px;
+  padding: 8px 14px;
+  background: #1c1c25;
+  color: #aaa;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
+button:hover {
+  background: #2a2a38;
+}
+
+/* GRAPH CANVAS */
 canvas {
   width: 100%;
+  height: 150px;
   background: #12121a;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 15px;
+  display: block;
 }
 
-/* keyboard */
+/* KEYBOARD */
 #keyboard {
   display: flex;
   flex-direction: column;
@@ -71,21 +98,54 @@ canvas {
   gap: 6px;
 }
 
+/* KEYS */
 .key {
-  width: 36px;
-  height: 42px;
+  width: 38px;
+  height: 44px;
   background: #1c1c25;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+
+  user-select: none;
+  transition: transform 0.08s ease, background 0.15s ease;
 }
 
+/* PRESS ANIMATION */
 .key:active {
+  transform: scale(0.92);
   background: #4caf50;
 }
 
+/* HOVER */
+.key:hover {
+  background: #2a2a38;
+}
+
+/* WIDE KEYS */
 .key.wide {
-  width: 85px;
+  width: 90px;
+}
+
+/* MOBILE FIX */
+@media (max-width: 600px) {
+  .sentence {
+    font-size: 20px;
+  }
+
+  .key {
+    width: 32px;
+    height: 40px;
+  }
+
+  .key.wide {
+    width: 70px;
+  }
+
+  .app {
+    margin: 20px auto;
+    padding: 15px;
+  }
 }
