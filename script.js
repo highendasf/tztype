@@ -14,7 +14,6 @@ let smoothHistory = [];
 let animationFrame = null;
 
 let highScore = localStorage.getItem("highScore") || 0;
-document.getElementById("highScore").innerText = highScore;
 
 /* ===================== SENTENCES ===================== */
 const sentences = [
@@ -24,6 +23,12 @@ const sentences = [
   "focus on accuracy before speed",
   "never stop learning new skills"
 ];
+
+/* ===================== SAFE INIT (IMPORTANT FIX) ===================== */
+window.onload = () => {
+  const highScoreEl = document.getElementById("highScore");
+  if (highScoreEl) highScoreEl.innerText = highScore;
+};
 
 /* ===================== START GAME ===================== */
 function startGame() {
@@ -39,11 +44,11 @@ function startGame() {
 
   clearInterval(timer);
   timer = setInterval(() => {
-    document.getElementById("time").innerText =
-      Math.floor((Date.now() - startTime) / 1000);
+    const timeEl = document.getElementById("time");
+    if (timeEl)
+      timeEl.innerText = Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
 
-  /* reset graph */
   wpmHistory = [];
   smoothHistory = [];
 
@@ -51,9 +56,11 @@ function startGame() {
   animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* ===================== UPDATE TEXT ===================== */
+/* ===================== UPDATE ===================== */
 function updateTyped() {
-  document.getElementById("typed").innerText = typedText;
+  const typedEl = document.getElementById("typed");
+  if (typedEl) typedEl.innerText = typedText;
+
   check();
 }
 
@@ -104,11 +111,13 @@ function check() {
 
 /* ===================== ACCURACY ===================== */
 function updateAccuracy() {
+  const accEl = document.getElementById("accuracy");
+
   let acc = totalChars === 0
     ? 100
     : Math.round((correctChars / totalChars) * 100);
 
-  document.getElementById("accuracy").innerText = acc;
+  if (accEl) accEl.innerText = acc;
 }
 
 /* ===================== FINISH ===================== */
@@ -120,27 +129,30 @@ function finishGame() {
   const words = currentSentence.split(" ").length;
   const wpm = Math.round((words / time) * 60);
 
-  document.getElementById("wpm").innerText = wpm;
+  const wpmEl = document.getElementById("wpm");
+  if (wpmEl) wpmEl.innerText = wpm;
 
   if (wpm > highScore) {
     highScore = wpm;
     localStorage.setItem("highScore", highScore);
-    document.getElementById("highScore").innerText = highScore;
+
+    const hs = document.getElementById("highScore");
+    if (hs) hs.innerText = highScore;
   }
 }
 
-/* ===================== GRAPH LOOP ===================== */
+/* ===================== GRAPH ===================== */
 function animateGraph() {
   drawGraph();
   animationFrame = requestAnimationFrame(animateGraph);
 }
 
-/* ===================== GRAPH ===================== */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
+  if (!canvas) return;
+
   const ctx = canvas.getContext("2d");
 
-  /* FIX CANVAS SIZE */
   canvas.width = canvas.offsetWidth;
   canvas.height = 150;
 
@@ -151,8 +163,10 @@ function drawGraph() {
   const time = (Date.now() - startTime) / 1000;
   if (time < 1) return;
 
-  /* REAL WPM */
-  const wordsTyped = typedText.trim().split(" ").length;
+  const wordsTyped = typedText.trim() === ""
+    ? 0
+    : typedText.trim().split(/\s+/).length;
+
   const wpm = Math.max(0, Math.round((wordsTyped / time) * 60));
 
   wpmHistory.push(wpm);
@@ -186,61 +200,11 @@ function drawGraph() {
 }
 
 /* ===================== KEYBOARD ===================== */
-const layout = [
-  ["Q","W","E","R","T","Y","U","I","O","P"],
-  ["A","S","D","F","G","H","J","K","L"],
-  ["Z","X","C","V","B","N","M"]
-];
-
-const keyboard = document.getElementById("keyboard");
-
-layout.forEach(row => {
-  const rowDiv = document.createElement("div");
-  rowDiv.className = "row";
-
-  row.forEach(letter => {
-    const key = document.createElement("div");
-    key.className = "key";
-    key.innerText = letter;
-
-    key.onclick = () => {
-      typedText += letter.toLowerCase();
-      updateTyped();
-    };
-
-    rowDiv.appendChild(key);
-  });
-
-  keyboard.appendChild(rowDiv);
-});
-
-/* bottom row */
-const bottom = document.createElement("div");
-bottom.className = "row";
-
-["SPACE", "⌫"].forEach(type => {
-  const key = document.createElement("div");
-  key.className = "key wide";
-  key.innerText = type;
-
-  key.onclick = () => {
-    if (type === "SPACE") typedText += " ";
-    if (type === "⌫") typedText = typedText.slice(0, -1);
-    updateTyped();
-  };
-
-  bottom.appendChild(key);
-});
-
-keyboard.appendChild(bottom);
-
-/* ===================== KEYBOARD CONTROL ===================== */
 document.addEventListener("keydown", e => {
   if (!currentSentence) return;
 
   const finished = typedText === currentSentence;
 
-  /* SPACE = START / CONTINUE / RESTART */
   if (e.key === " ") {
     e.preventDefault();
 
@@ -259,14 +223,12 @@ document.addEventListener("keydown", e => {
     return;
   }
 
-  /* BACKSPACE */
   if (e.key === "Backspace") {
     typedText = typedText.slice(0, -1);
     updateTyped();
     return;
   }
 
-  /* LETTERS */
   if (e.key.length === 1) {
     typedText += e.key.toLowerCase();
     updateTyped();
