@@ -4,15 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Typing Game</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
   <div class="app">
-
-    <!-- TOP STATS -->
     <div class="top">
       <span><b id="wpm">0</b> WPM</span>
       <span><b id="time">0</b>s</span>
@@ -20,25 +15,15 @@
       <span>best: <b id="highScore">0</b></span>
     </div>
 
-    <!-- SENTENCE -->
     <div id="sentence" class="sentence"></div>
-
-    <!-- LIVE TYPED TEXT -->
     <div id="typed" class="typed"></div>
 
-    <!-- START BUTTON (optional backup) -->
-    <button onclick="startGame()">start</button>
+    <button onclick="startGame()">Start New Game</button>
 
-    <!-- GRAPH -->
     <canvas id="wpmChart"></canvas>
-
-    <!-- KEYBOARD -->
     <div id="keyboard"></div>
-
   </div>
 
-  <!-- SCRIPT -->
   <script src="script.js"></script>
-
 </body>
 </html>
