@@ -1,74 +1,91 @@
 body {
-  font-family: Arial;
-  background: #1e1e2f;
-  color: white;
   margin: 0;
+  font-family: monospace;
+  background: #0f0f14;
+  color: #aaa;
 }
 
-.container {
-  max-width: 600px;
-  width: 95%;
-  margin: 20px auto;
-  text-align: center;
+.app {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
 }
 
-#sentence {
-  background: #2e2e4d;
-  padding: 12px;
-  border-radius: 10px;
+.top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  color: #777;
 }
 
-#typed {
-  background: white;
-  color: black;
-  height: 110px;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: left;
+.sentence {
+  font-size: 24px;
+  line-height: 1.6;
+  margin-bottom: 10px;
 }
 
-/* ✅ KEYBOARD FIX (MOST IMPORTANT PART) */
+.word {
+  opacity: 0.3;
+}
+
+.word.word-correct {
+  opacity: 1;
+  color: #4caf50;
+}
+
+.word.word-wrong {
+  opacity: 1;
+  color: #ff4d4d;
+}
+
+.correct { color: #4caf50; }
+.wrong { color: #ff4d4d; }
+
+.typed {
+  height: 30px;
+  border-bottom: 2px solid #444;
+  margin-bottom: 15px;
+}
+
+button {
+  margin-bottom: 15px;
+}
+
+canvas {
+  width: 100%;
+  background: #12121a;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+/* keyboard */
 #keyboard {
-  margin-top: 15px;
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
-  width: 100%;
-  min-height: 120px; /* prevents "not showing" bug */
 }
 
 .row {
   display: flex;
-  justify-content: center;
   gap: 6px;
-  width: 100%;
 }
 
 .key {
-  background: #2e2e4d;
-  color: white;
-  padding: 10px;
+  width: 36px;
+  height: 42px;
+  background: #1c1c25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   cursor: pointer;
-  user-select: none;
-  width: 34px;
-  text-align: center;
 }
 
 .key:active {
   background: #4caf50;
-  transform: scale(0.95);
 }
 
 .key.wide {
-  width: 80px;
-}
-
-/* mobile */
-@media (max-width: 600px) {
-  .key {
-    width: 28px;
-  }
+  width: 85px;
 }
