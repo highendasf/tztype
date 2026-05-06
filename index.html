@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZType</title>
+  <title>TZType Fixed</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -10,21 +10,21 @@
 
 <div class="layout">
 
+  <!-- HAMBURGER (ALWAYS VISIBLE) -->
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
   <!-- SIDEBAR -->
   <div class="sidebar">
 
-    <div class="sidebar-top">
-      <div class="title">Typing Game</div>
-
-      <div class="hamburger" onclick="toggleMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
+    <div class="title">Typing Game</div>
 
     <button onclick="showPage('game')" class="active">Game</button>
     <button onclick="showPage('history')">History</button>
+
   </div>
 
   <!-- CONTENT -->
@@ -40,24 +40,19 @@
       </div>
 
       <div id="sentence" class="sentence"></div>
-      <div id="typed" class="typed" tabindex="0"></div>
-
-      <div class="legend">
-        <span class="wpm-dot">● WPM</span>
-        <span class="acc-dot">● Accuracy</span>
-      </div>
+      <div id="typed" class="typed"></div>
 
       <canvas id="wpmChart"></canvas>
 
       <div class="controls">
-        <button onclick="toggleMode()">Mode: <span id="modeLabel">Words</span></button>
+        <button onclick="toggleMode()">Mode</button>
         <button onclick="toggleKeyboard()">Keyboard</button>
-        <span class="shortcut">TAB</span>
       </div>
 
       <div id="keyboard"></div>
 
       <button onclick="startGame()">Start</button>
+
     </div>
 
     <!-- HISTORY -->
