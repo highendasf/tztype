@@ -1,38 +1,104 @@
 body {
   margin: 0;
   font-family: monospace;
-  background: #0f0f14;
+  background: radial-gradient(circle at top, #141420, #0b0b10);
+  color: #d0d0d0;
+}
+
+/* ================= LAYOUT ================= */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 210px;
+  padding: 18px;
+  background: rgba(18, 18, 26, 0.7);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar .title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 10px;
+}
+
+/* sidebar buttons */
+.sidebar button {
+  background: transparent;
   color: #aaa;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
 }
 
+.sidebar button:hover {
+  border-color: #4caf50;
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.sidebar button.active {
+  border-color: #4caf50;
+  color: #4caf50;
+  box-shadow: 0 0 10px rgba(76,175,80,0.2);
+}
+
+/* ================= CONTENT ================= */
+.content {
+  flex: 1;
+  padding: 30px;
+}
+
+/* ================= APP CARD ================= */
 .app {
-  max-width: 750px;
-  margin: 40px auto;
-  padding: 20px;
+  max-width: 850px;
+  margin: auto;
+  padding: 22px;
+
+  background: rgba(18,18,26,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+
+  backdrop-filter: blur(10px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
+/* ================= TOP STATS ================= */
 .top {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 14px;
 }
 
+/* ================= TEXT AREA ================= */
 .sentence {
   font-size: 22px;
   margin-bottom: 10px;
+  color: #ddd;
+  line-height: 1.6;
 }
 
 .typed {
-  border-bottom: 2px solid #444;
-  height: 30px;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  height: 36px;
   margin-bottom: 10px;
 }
 
-/* COLORS */
-.correct { color: #4caf50; }
-.wrong { color: #ff4d4d; }
-
-/* CURSOR */
+/* ================= CURSOR ================= */
 .cursor {
   border-right: 2px solid #4caf50;
   animation: blink 0.8s infinite;
@@ -42,61 +108,68 @@ body {
   50% { border-color: transparent; }
 }
 
-/* GRAPH */
-canvas {
-  width: 100%;
-  height: 150px;
-  background: #12121a;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-/* LEGEND */
+/* ================= LEGEND ================= */
 .legend {
   font-size: 12px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .wpm-dot { color: #4caf50; margin-right: 10px; }
 .acc-dot { color: #2196f3; }
 
-/* BUTTONS */
+/* ================= GRAPH ================= */
+canvas {
+  width: 100%;
+  height: 170px;
+  margin-top: 10px;
+
+  background: rgba(10,10,14,0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+/* ================= BUTTONS ================= */
 button {
   background: #1c1c25;
   color: #aaa;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 8px 14px;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  margin-bottom: 8px;
+  transition: 0.2s;
 }
 
 button:hover {
-  background: #2a2a38;
+  border-color: #4caf50;
+  color: #fff;
+  transform: scale(1.02);
 }
 
-/* CONTROLS */
+/* ================= CONTROLS ================= */
 .controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* TAB HINT */
+/* TAB hint */
 .shortcut {
   background: #1c1c25;
   border: 1px solid #333;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
+  opacity: 0.8;
 }
 
-/* KEYBOARD */
+/* ================= KEYBOARD ================= */
 #keyboard {
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: opacity 0.3s ease;
+  gap: 6px;
 }
 
 .row {
@@ -109,17 +182,29 @@ button:hover {
   width: 38px;
   height: 44px;
   background: #1c1c25;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+
+  transition: 0.15s;
 }
 
 .key:active {
   transform: scale(0.9);
-  background: #4caf50;
+  border-color: #4caf50;
+  box-shadow: 0 0 10px rgba(76,175,80,0.2);
 }
 
 .key.wide {
   width: 90px;
+}
+
+/* ================= HISTORY ================= */
+#historyBox {
+  margin-top: 10px;
+  line-height: 1.8;
+  color: #aaa;
 }
