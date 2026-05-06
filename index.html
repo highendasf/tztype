@@ -4,10 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Typing Game</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Mobile console (optional but useful) -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
 </head>
+
 <body>
+
   <div class="app">
+
     <div class="top">
       <span><b id="wpm">0</b> WPM</span>
       <span><b id="time">0</b>s</span>
@@ -18,10 +26,13 @@
     <div id="sentence" class="sentence"></div>
     <div id="typed" class="typed"></div>
 
-    <button onclick="startGame()">Start New Game</button>
+    <button onclick="startGame()">start</button>
 
     <canvas id="wpmChart"></canvas>
+
+    <!-- ⌨️ REQUIRED -->
     <div id="keyboard"></div>
+
   </div>
 
   <script src="script.js"></script>
