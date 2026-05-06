@@ -1,4 +1,4 @@
-console.log("TZType FULL FIX v1.1 ✔");
+console.log("TZType Dual Graph ✔");
 
 let typedText = "";
 let currentSentence = "";
@@ -9,6 +9,7 @@ let cursorIndex = 0;
 let highScore = localStorage.getItem("highScore") || 0;
 
 let wpmHistory = [];
+let accuracyHistory = [];
 let animationFrame;
 let smoothWPM = 0;
 
@@ -34,12 +35,11 @@ function startGame() {
   cursorIndex = 0;
   startTime = Date.now();
 
-  document.getElementById("highScore").innerText = highScore;
-
   renderSentence();
   updateTyped();
 
   wpmHistory = [];
+  accuracyHistory = [];
   smoothWPM = 0;
 
   cancelAnimationFrame(animationFrame);
@@ -56,7 +56,7 @@ function renderSentence() {
     ).join(" ");
 }
 
-/* SMOOTH WPM */
+/* WPM */
 function getWPM() {
   if (!startTime) return 0;
 
@@ -69,6 +69,19 @@ function getWPM() {
   smoothWPM += (raw - smoothWPM) * 0.2;
 
   return Math.round(smoothWPM);
+}
+
+/* ACCURACY */
+function getAccuracy() {
+  let correct = 0;
+
+  for (let i = 0; i < typedText.length; i++) {
+    if (typedText[i] === currentSentence[i]) correct++;
+  }
+
+  if (typedText.length === 0) return 100;
+
+  return Math.round((correct / typedText.length) * 100);
 }
 
 /* INPUT */
@@ -108,6 +121,8 @@ function updateTyped() {
   highlight();
 
   document.getElementById("wpm").innerText = getWPM();
+  document.getElementById("accuracy").innerText = getAccuracy();
+  document.getElementById("highScore").innerText = highScore;
 }
 
 /* HIGHLIGHT */
@@ -143,8 +158,6 @@ function finishGame() {
     highScore = wpm;
     localStorage.setItem("highScore", wpm);
   }
-
-  document.getElementById("highScore").innerText = highScore;
 }
 
 /* GRAPH */
@@ -163,28 +176,38 @@ function drawGraph() {
   }
 
   const wpm = getWPM();
+  const acc = getAccuracy();
 
   wpmHistory.push(wpm);
-  if (wpmHistory.length > 120) wpmHistory.shift();
+  accuracyHistory.push(acc);
 
-  // stabilize drops
-  if (wpmHistory.length > 2) {
-    const last = wpmHistory[wpmHistory.length - 1];
-    const prev = wpmHistory[wpmHistory.length - 2];
-
-    if (last < prev * 0.5) {
-      wpmHistory[wpmHistory.length - 1] = prev * 0.7;
-    }
+  if (wpmHistory.length > 120) {
+    wpmHistory.shift();
+    accuracyHistory.shift();
   }
 
-  const max = Math.max(...wpmHistory, 20);
+  const maxWPM = Math.max(...wpmHistory, 20);
 
+  /* WPM LINE */
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
 
   wpmHistory.forEach((v, i) => {
-    const x = (i / wpmHistory.length) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const x = (i / (wpmHistory.length - 1)) * canvas.width;
+    const y = canvas.height - (v / maxWPM) * canvas.height;
+
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+
+  /* ACCURACY LINE */
+  ctx.beginPath();
+  ctx.strokeStyle = "#2196f3";
+
+  accuracyHistory.forEach((v, i) => {
+    const x = (i / (accuracyHistory.length - 1)) * canvas.width;
+    const y = canvas.height - (v / 100) * canvas.height;
 
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
@@ -234,7 +257,7 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* TOGGLE KEYBOARD */
+/* TOGGLE */
 function toggleKeyboard() {
   const kb = document.getElementById("keyboard");
 
@@ -244,7 +267,7 @@ function toggleKeyboard() {
   kb.style.pointerEvents = keyboardVisible ? "auto" : "none";
 }
 
-/* KEY INPUT */
+/* INPUT */
 document.addEventListener("keydown", (e) => {
   if (finished) return;
 
