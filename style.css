@@ -22,13 +22,13 @@ body {
 }
 
 button {
-  margin-bottom: 10px;
   padding: 8px 10px;
   background: #1c1c25;
-  color: #aaa;
   border: none;
+  color: #aaa;
   border-radius: 6px;
   cursor: pointer;
+  margin-bottom: 10px;
 }
 
 button:hover {
@@ -46,7 +46,6 @@ button:hover {
   margin-bottom: 10px;
 }
 
-/* GRAPH */
 canvas {
   width: 100%;
   height: 150px;
@@ -67,7 +66,6 @@ canvas {
   opacity: 0;
   transform: translateY(10px);
   pointer-events: none;
-  max-height: 0;
 }
 
 .row {
@@ -94,4 +92,13 @@ canvas {
 
 .key.wide {
   width: 90px;
-} 
+}
+
+/* HIGHLIGHT */
+.correct {
+  color: #4caf50;
+}
+
+.wrong {
+  color: #ff4d4d;
+}
