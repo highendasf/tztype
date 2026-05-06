@@ -12,6 +12,7 @@ let totalChars = 0;
 let rawHistory = [];
 let smoothHistory = [];
 let spikeHistory = [];
+let wpmMapPoints = [];
 
 let animationFrame = null;
 let highScore = localStorage.getItem("highScore") || 0;
@@ -58,6 +59,7 @@ function startGame() {
   rawHistory = [];
   smoothHistory = [];
   spikeHistory = [];
+  wpmMapPoints = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
@@ -130,7 +132,7 @@ function finishGame() {
   }
 }
 
-/* ================= GRAPH ENGINE ================= */
+/* ================= GRAPH ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   if (!canvas) return;
@@ -172,9 +174,17 @@ function drawGraph() {
     spikeHistory.push(smoothHistory.length - 1);
   }
 
+  /* WPM MAP (NEW FEATURE) */
+  wpmMapPoints.push({
+    wpm: Math.round(smooth),
+    index: smoothHistory.length - 1
+  });
+
+  if (wpmMapPoints.length > 20) wpmMapPoints.shift();
+
   const max = Math.max(...smoothHistory, 20);
 
-  /* SPEED ZONES */
+  /* ZONES */
   ctx.fillStyle = "rgba(255,0,0,0.05)";
   ctx.fillRect(0, 0, canvas.width, canvas.height * 0.5);
 
@@ -225,6 +235,26 @@ function drawGraph() {
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
+  });
+
+  /* WPM MAP POINTS (NEW) */
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "10px monospace";
+  ctx.textAlign = "center";
+
+  wpmMapPoints.forEach(p => {
+    const v = smoothHistory[p.index];
+    if (!v) return;
+
+    const x = (p.index / smoothHistory.length) * canvas.width;
+    const y = canvas.height - (v / max) * canvas.height;
+
+    ctx.beginPath();
+    ctx.fillStyle = "#ffffff";
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillText(p.wpm, x, y - 8);
   });
 
   animationFrame = requestAnimationFrame(drawGraph);
