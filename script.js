@@ -1,5 +1,3 @@
-console.log("TZType ULTRA ✔");
-
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
@@ -7,6 +5,7 @@ let finished = false;
 let cursorIndex = 0;
 
 let mode = "words";
+let menuOpen = true;
 
 let highScore = localStorage.getItem("highScore") || 0;
 
@@ -16,34 +15,25 @@ let accuracyHistory = [];
 let smoothWPM = 0;
 let smoothAcc = 100;
 
-let keyboardVisible = true;
+let animationFrame;
 
 /* DATA */
-const wordBank = [
-  "apple","banana","keyboard","screen","typing","speed",
-  "accuracy","focus","practice","javascript","coding","react"
-];
-
+const wordBank = ["apple","banana","keyboard","typing","speed","code","focus","react"];
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
-  "practice typing every day to improve speed",
-  "javascript makes websites interactive and dynamic",
-  "focus on accuracy before increasing speed",
-  "clean code is better than clever code"
+  "practice typing every day",
+  "javascript makes websites interactive"
 ];
 
-/* START GAME */
+/* START */
 function startGame() {
   finished = false;
 
-  if (mode === "words") {
-    currentSentence = Array.from({ length: 15 }, () =>
-      wordBank[Math.floor(Math.random() * wordBank.length)]
-    ).join(" ");
-  } else {
-    currentSentence =
-      sentences[Math.floor(Math.random() * sentences.length)];
-  }
+  currentSentence = mode === "words"
+    ? Array.from({ length: 15 }, () =>
+        wordBank[Math.floor(Math.random() * wordBank.length)]
+      ).join(" ")
+    : sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
   cursorIndex = 0;
@@ -55,9 +45,6 @@ function startGame() {
   wpmHistory = [];
   accuracyHistory = [];
 
-  smoothWPM = 0;
-  smoothAcc = 100;
-
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
 }
@@ -65,24 +52,35 @@ function startGame() {
 /* RENDER */
 function renderSentence() {
   document.getElementById("sentence").innerHTML =
-    currentSentence.split(" ").map(word =>
-      `<span class="word">${
-        word.split("").map(c => `<span class="letter">${c}</span>`).join("")
-      }</span>`
+    currentSentence.split(" ").map(w =>
+      `<span class="word">${w}</span>`
     ).join(" ");
+}
+
+/* FIXED HIGHLIGHT */
+function highlight() {
+  const words = document.querySelectorAll(".word");
+  const typedWords = typedText.split(" ");
+
+  words.forEach((w, i) => {
+    const typed = typedWords[i] || "";
+
+    if (!typed) return;
+
+    if (typed !== w.innerText) {
+      w.style.color = "#ff4d4d";
+    } else {
+      w.style.color = "#4caf50";
+    }
+  });
 }
 
 /* WPM */
 function getWPM() {
-  if (!startTime) return 0;
-
   const time = (Date.now() - startTime) / 1000;
-  if (time < 1) return 0;
-
   const raw = (typedText.length / 5) / (time / 60);
 
   smoothWPM += (raw - smoothWPM) * 0.08;
-
   return Math.round(smoothWPM);
 }
 
@@ -94,114 +92,37 @@ function getAccuracy() {
     if (typedText[i] === currentSentence[i]) correct++;
   }
 
-  let raw = typedText.length === 0 ? 100 :
-    (correct / typedText.length) * 100;
+  let raw = typedText.length
+    ? (correct / typedText.length) * 100
+    : 100;
 
   smoothAcc += (raw - smoothAcc) * 0.1;
-
   return Math.round(smoothAcc);
 }
 
 /* INPUT */
-function pressKey(key) {
+function pressKey(k) {
   if (finished) return;
 
   if (!startTime) startGame();
 
-  if (key === "⌫") {
-    typedText = typedText.slice(0, -1);
-    cursorIndex--;
-  } else if (key === "SPACE") {
-    typedText += " ";
-    cursorIndex++;
-  } else {
-    typedText += key;
-    cursorIndex++;
-  }
+  if (k === "⌫") typedText = typedText.slice(0, -1);
+  else if (k === "SPACE") typedText += " ";
+  else typedText += k;
 
   updateTyped();
-
-  if (typedText === currentSentence) finishGame();
 }
 
 /* UPDATE */
 function updateTyped() {
-  document.getElementById("typed").innerHTML =
-    typedText.split("").map((c, i) => {
-      const show = c === " " ? "·" : c;
-      return i === cursorIndex
-        ? `<span class="cursor">${show}</span>`
-        : show;
-    }).join("");
-
   document.getElementById("wpm").innerText = getWPM();
   document.getElementById("accuracy").innerText = getAccuracy();
   document.getElementById("highScore").innerText = highScore;
+
+  highlight();
 }
 
-/* FINISH */
-function finishGame() {
-  finished = true;
-
-  const wpm = getWPM();
-
-  if (wpm > highScore) {
-    highScore = wpm;
-    localStorage.setItem("highScore", wpm);
-  }
-
-  saveHistory(wpm, getAccuracy());
-}
-
-/* HISTORY */
-function saveHistory(wpm, acc) {
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-
-  history.push({
-    wpm,
-    acc,
-    time: Date.now()
-  });
-
-  localStorage.setItem("history", JSON.stringify(history));
-}
-
-function loadHistory() {
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-
-  const box = document.getElementById("historyBox");
-
-  if (!history.length) {
-    box.innerHTML = "<p>No history yet</p>";
-    return;
-  }
-
-  box.innerHTML = history.slice(-10).reverse().map(h =>
-    `<div>WPM: ${h.wpm} | Acc: ${h.acc}%</div>`
-  ).join("");
-}
-
-/* MODE */
-function toggleMode() {
-  mode = mode === "words" ? "sentences" : "words";
-  document.getElementById("modeLabel").innerText =
-    mode === "words" ? "Words" : "Sentences";
-
-  startGame();
-}
-
-/* PAGE SWITCH */
-function showPage(page) {
-  document.getElementById("gamePage").style.display =
-    page === "game" ? "block" : "none";
-
-  document.getElementById("historyPage").style.display =
-    page === "history" ? "block" : "none";
-
-  if (page === "history") loadHistory();
-}
-
-/* GRAPH (ULTRA SMOOTH + GRADIENT) */
+/* GRAPH FIXED */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
@@ -209,15 +130,13 @@ function drawGraph() {
   canvas.width = canvas.offsetWidth;
   canvas.height = 170;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  if (!startTime) {
-    animationFrame = requestAnimationFrame(drawGraph);
-    return;
-  }
+  const wpm = getWPM();
+  const acc = getAccuracy();
 
-  wpmHistory.push(getWPM());
-  accuracyHistory.push(getAccuracy());
+  wpmHistory.push(wpm);
+  accuracyHistory.push(acc);
 
   if (wpmHistory.length > 120) {
     wpmHistory.shift();
@@ -235,15 +154,13 @@ function drawArea(data, max, stroke, fill) {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
 
-  if (data.length < 2) return;
-
   ctx.beginPath();
   ctx.moveTo(0, canvas.height);
 
-  data.forEach((v, i) => {
-    const x = (i / (data.length - 1)) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
-    ctx.lineTo(x, y);
+  data.forEach((v,i)=>{
+    const x = (i/(data.length-1))*canvas.width;
+    const y = canvas.height - (v/max)*canvas.height;
+    ctx.lineTo(x,y);
   });
 
   ctx.lineTo(canvas.width, canvas.height);
@@ -251,74 +168,27 @@ function drawArea(data, max, stroke, fill) {
 
   ctx.fillStyle = fill;
   ctx.fill();
-
   ctx.strokeStyle = stroke;
   ctx.stroke();
 }
 
-/* KEYBOARD */
-function buildKeyboard() {
-  const layout = [
-    ["Q","W","E","R","T","Y","U","I","O","P"],
-    ["A","S","D","F","G","H","J","K","L"],
-    ["Z","X","C","V","B","N","M"]
-  ];
-
-  const kb = document.getElementById("keyboard");
-  kb.innerHTML = "";
-
-  layout.forEach(row => {
-    const div = document.createElement("div");
-    div.className = "row";
-
-    row.forEach(k => {
-      const key = document.createElement("div");
-      key.className = "key";
-      key.innerText = k;
-      key.onclick = () => pressKey(k.toLowerCase());
-      div.appendChild(key);
-    });
-
-    kb.appendChild(div);
-  });
-
-  const bottom = document.createElement("div");
-  bottom.className = "row";
-
-  ["SPACE","⌫"].forEach(k => {
-    const key = document.createElement("div");
-    key.className = "key wide";
-    key.innerText = k;
-    key.onclick = () => pressKey(k);
-    bottom.appendChild(key);
-  });
-
-  kb.appendChild(bottom);
+/* MENU */
+function toggleMenu() {
+  document.querySelector(".sidebar").classList.toggle("hide");
 }
 
-/* TOGGLE KEYBOARD */
-function toggleKeyboard() {
-  const kb = document.getElementById("keyboard");
-
-  keyboardVisible = !keyboardVisible;
-
-  kb.style.opacity = keyboardVisible ? "1" : "0";
-  kb.style.pointerEvents = keyboardVisible ? "auto" : "none";
+/* PAGE */
+function showPage(p) {
+  document.getElementById("gamePage").style.display = p==="game"?"block":"none";
+  document.getElementById("historyPage").style.display = p==="history"?"block":"none";
 }
 
-/* INPUT */
-document.addEventListener("keydown", (e) => {
-  if (finished) return;
-
-  if (e.key === "Backspace") return pressKey("⌫");
-
-  if (e.key === " ") {
-    e.preventDefault();
-    return pressKey("SPACE");
-  }
-
-  if (e.key.length === 1) pressKey(e.key.toLowerCase());
-});
+/* MODE */
+function toggleMode() {
+  mode = mode === "words" ? "sentences" : "words";
+  document.getElementById("modeLabel").innerText = mode;
+  startGame();
+}
 
 /* INIT */
-window.onload = buildKeyboard;
+window.onload = startGame;
