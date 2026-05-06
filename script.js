@@ -1,6 +1,6 @@
-console.log("Typing game FULLY CONNECTED ✔");
+console.log("FINAL BUILD ✔");
 
-/* ================= STATE ================= */
+/* STATE */
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
@@ -15,7 +15,7 @@ let animationFrame = null;
 
 let highScore = localStorage.getItem("highScore") || 0;
 
-/* ================= SENTENCES ================= */
+/* SENTENCES */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day to improve speed",
@@ -24,17 +24,16 @@ const sentences = [
   "never stop learning new skills"
 ];
 
-/* ================= INIT ================= */
+/* INIT */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
-  buildKeyboard(); // 🔥 ensure keyboard loads
+  buildKeyboard();
 };
 
-/* ================= START ================= */
+/* START */
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
 
-  // render sentence
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
       `<span class="word">${
@@ -60,16 +59,16 @@ function startGame() {
   smoothHistory = [];
 
   cancelAnimationFrame(animationFrame);
-  animationFrame = requestAnimationFrame(animateGraph);
+  animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= UPDATE ================= */
+/* UPDATE */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
   check();
 }
 
-/* ================= CHECK ================= */
+/* CHECK */
 function check() {
   const words = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
@@ -80,8 +79,6 @@ function check() {
   words.forEach((wordSpan, i) => {
     const letters = wordSpan.querySelectorAll("span");
     const typedWord = typedWords[i] || "";
-
-    let wordCorrect = true;
 
     letters.forEach((letter, j) => {
       letter.classList.remove("correct", "wrong");
@@ -94,19 +91,8 @@ function check() {
         correctChars++;
       } else {
         letter.classList.add("wrong");
-        wordCorrect = false;
       }
     });
-
-    wordSpan.classList.remove("word-correct", "word-wrong");
-
-    if (!typedWord) return;
-
-    if (typedWord === wordSpan.innerText) {
-      wordSpan.classList.add("word-correct");
-    } else if (!wordCorrect) {
-      wordSpan.classList.add("word-wrong");
-    }
   });
 
   updateAccuracy();
@@ -114,7 +100,7 @@ function check() {
   if (typedText === currentSentence) finishGame();
 }
 
-/* ================= ACCURACY ================= */
+/* ACCURACY */
 function updateAccuracy() {
   const acc = totalChars === 0
     ? 100
@@ -123,14 +109,13 @@ function updateAccuracy() {
   document.getElementById("accuracy").innerText = acc;
 }
 
-/* ================= FINISH ================= */
+/* FINISH */
 function finishGame() {
   clearInterval(timer);
   cancelAnimationFrame(animationFrame);
 
   const time = (Date.now() - startTime) / 1000;
-  const words = currentSentence.split(" ").length;
-  const wpm = Math.round((words / time) * 60);
+  const wpm = Math.round((typedText.length / 5) / (time / 60));
 
   document.getElementById("wpm").innerText = wpm;
 
@@ -141,16 +126,9 @@ function finishGame() {
   }
 }
 
-/* ================= GRAPH ================= */
-function animateGraph() {
-  drawGraph();
-  animationFrame = requestAnimationFrame(animateGraph);
-}
-
+/* GRAPH */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
-  if (!canvas) return;
-
   const ctx = canvas.getContext("2d");
 
   canvas.width = canvas.offsetWidth;
@@ -163,12 +141,7 @@ function drawGraph() {
   const time = (Date.now() - startTime) / 1000;
   if (time < 0.3) return;
 
-  const chars = typedText.length;
-  const rawWpm = (chars / 5) / (time / 60);
-  const wpm = Math.max(0, Math.round(rawWpm));
-
-  wpmHistory.push(wpm);
-  if (wpmHistory.length > 120) wpmHistory.shift();
+  const wpm = (typedText.length / 5) / (time / 60);
 
   const last = smoothHistory.length
     ? smoothHistory[smoothHistory.length - 1]
@@ -179,25 +152,22 @@ function drawGraph() {
   smoothHistory.push(smooth);
   if (smoothHistory.length > 120) smoothHistory.shift();
 
-  if (smoothHistory.length < 2) return;
-
-  const max = Math.max(...smoothHistory, 50);
-
   ctx.beginPath();
-  ctx.lineWidth = 2;
   ctx.strokeStyle = "#4caf50";
 
   smoothHistory.forEach((v, i) => {
     const x = (i / (smoothHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const y = canvas.height - (v / 100) * canvas.height;
 
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
 
   ctx.stroke();
+
+  animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= KEYBOARD (BUILD) ================= */
+/* KEYBOARD BUILD */
 function buildKeyboard() {
   const layout = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -241,49 +211,25 @@ function buildKeyboard() {
   keyboard.appendChild(bottom);
 }
 
-/* ================= KEY PRESS HANDLER ================= */
-function pressKey(key, element) {
+/* KEY PRESS */
+function pressKey(key, el) {
   if (!startTime) startGame();
 
-  if (key === "⌫") {
-    typedText = typedText.slice(0, -1);
-  } else if (key === "SPACE") {
-    typedText += " ";
-  } else {
-    typedText += key;
-  }
+  if (key === "⌫") typedText = typedText.slice(0, -1);
+  else if (key === "SPACE") typedText += " ";
+  else typedText += key;
 
   updateTyped();
 
-  // animation
-  if (element) {
-    element.style.background = "#4caf50";
-    setTimeout(() => element.style.background = "#1c1c25", 80);
+  if (el) {
+    el.style.background = "#4caf50";
+    setTimeout(() => el.style.background = "#1c1c25", 80);
   }
 }
 
-/* ================= PHYSICAL KEYBOARD ================= */
+/* PHYSICAL KEYS */
 document.addEventListener("keydown", e => {
-  const finished = typedText === currentSentence;
-
-  if (e.key === " ") {
-    e.preventDefault();
-
-    if (!startTime || finished) {
-      startGame();
-      return;
-    }
-
-    pressKey("SPACE");
-    return;
-  }
-
-  if (e.key === "Backspace") {
-    pressKey("⌫");
-    return;
-  }
-
-  if (e.key.length === 1) {
-    pressKey(e.key.toLowerCase());
-  }
+  if (e.key === "Backspace") return pressKey("⌫");
+  if (e.key === " ") return pressKey("SPACE");
+  if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
