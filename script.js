@@ -1,4 +1,4 @@
-console.log("Typing App FULL CONNECTED ✔");
+console.log("Typing App FULL UPGRADED ✔");
 
 /* ================= STATE ================= */
 let typedText = "";
@@ -15,25 +15,74 @@ let spikeHistory = [];
 let wpmMapPoints = [];
 
 let animationFrame = null;
+
 let highScore = localStorage.getItem("highScore") || 0;
+
+/* ================= MODE ================= */
+let mode = "sentence";
+
+/* ================= WORD BANK ================= */
+const words = [
+  "the","quick","brown","fox","jumps","over","lazy","dog",
+  "practice","typing","speed","accuracy","focus","keyboard",
+  "javascript","function","variable","object","array",
+  "developer","code","debug","error","logic","system",
+  "learn","build","create","fast","slow","improve",
+  "programming","computer","software","internet","browser"
+];
+
+/* ================= SENTENCES ================= */
+const sentences = [
+  "the quick brown fox jumps over the lazy dog",
+  "practice typing every day to improve speed and accuracy",
+  "javascript makes websites interactive and dynamic",
+  "focus on accuracy before speed will give better results",
+  "never stop learning new skills in programming",
+  "clean code is better than clever code",
+  "debugging is part of becoming a better developer",
+  "consistency is more important than motivation",
+  "slow is smooth smooth is fast",
+  "write code like someone else will read it"
+];
 
 /* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
+
+  setupModeButtons();
   buildKeyboard();
+  setMode("sentence");
 };
+
+/* ================= MODE SWITCH ================= */
+function setupModeButtons() {
+  const sBtn = document.getElementById("sentenceModeBtn");
+  const wBtn = document.getElementById("wordModeBtn");
+
+  sBtn.onclick = () => setMode("sentence");
+  wBtn.onclick = () => setMode("word");
+}
+
+function setMode(m) {
+  mode = m;
+
+  document.getElementById("sentenceModeBtn").classList.remove("active");
+  document.getElementById("wordModeBtn").classList.remove("active");
+
+  if (m === "sentence") {
+    document.getElementById("sentenceModeBtn").classList.add("active");
+  } else {
+    document.getElementById("wordModeBtn").classList.add("active");
+  }
+}
 
 /* ================= START GAME ================= */
 function startGame() {
-  const sentences = [
-    "the quick brown fox jumps over the lazy dog",
-    "practice typing every day to improve speed",
-    "javascript makes websites interactive",
-    "focus on accuracy before speed",
-    "never stop learning new skills"
-  ];
-
-  currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+  if (mode === "word") {
+    currentSentence = generateRandomSentence(12);
+  } else {
+    currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+  }
 
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
@@ -45,16 +94,7 @@ function startGame() {
   typedText = "";
   updateTyped();
 
-  correctChars = 0;
-  totalChars = 0;
-
   startTime = Date.now();
-
-  clearInterval(timer);
-  timer = setInterval(() => {
-    document.getElementById("time").innerText =
-      Math.floor((Date.now() - startTime) / 1000);
-  }, 1000);
 
   rawHistory = [];
   smoothHistory = [];
@@ -65,7 +105,16 @@ function startGame() {
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= UPDATE ================= */
+/* ================= RANDOM WORDS ================= */
+function generateRandomSentence(count = 12) {
+  let result = [];
+  for (let i = 0; i < count; i++) {
+    result.push(words[Math.floor(Math.random() * words.length)]);
+  }
+  return result.join(" ");
+}
+
+/* ================= INPUT ================= */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
   check();
@@ -73,48 +122,24 @@ function updateTyped() {
 
 /* ================= CHECK ================= */
 function check() {
-  const words = document.querySelectorAll(".word");
+  const wordsEl = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
 
   correctChars = 0;
   totalChars = typedText.length;
 
-  words.forEach((wordSpan, i) => {
-    const letters = wordSpan.querySelectorAll("span");
+  wordsEl.forEach((wordSpan, i) => {
     const typedWord = typedWords[i] || "";
 
-    letters.forEach((letter, j) => {
-      letter.classList.remove("correct", "wrong");
-
-      const char = typedWord[j];
-      if (!char) return;
-
-      if (char === letter.innerText) {
-        letter.classList.add("correct");
-        correctChars++;
-      } else {
-        letter.classList.add("wrong");
-      }
-    });
+    wordSpan.style.color =
+      typedWord === wordSpan.innerText ? "#4caf50" : "#ff4d4d";
   });
-
-  updateAccuracy();
 
   if (typedText === currentSentence) finishGame();
 }
 
-/* ================= ACCURACY ================= */
-function updateAccuracy() {
-  const acc = totalChars === 0
-    ? 100
-    : Math.round((correctChars / totalChars) * 100);
-
-  document.getElementById("accuracy").innerText = acc;
-}
-
 /* ================= FINISH ================= */
 function finishGame() {
-  clearInterval(timer);
   cancelAnimationFrame(animationFrame);
 
   const time = (Date.now() - startTime) / 1000;
@@ -129,23 +154,20 @@ function finishGame() {
   }
 }
 
-/* ================= GRAPH (FIXED + SHARP + WPM MAP) ================= */
+/* ================= GRAPH ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
-
   const rect = canvas.getBoundingClientRect();
 
-  // 🔥 FIX: sharp canvas scaling (NO BLUR)
   const dpr = window.devicePixelRatio || 1;
 
   canvas.width = rect.width * dpr;
   canvas.height = 150 * dpr;
 
   ctx.scale(dpr, dpr);
-
   canvas.style.width = rect.width + "px";
   canvas.style.height = "150px";
 
@@ -157,30 +179,23 @@ function drawGraph() {
   }
 
   const time = (Date.now() - startTime) / 1000;
-
   const chars = typedText.length;
+
   const rawWpm = (chars / 5) / (time / 60);
 
-  /* RAW */
   rawHistory.push(rawWpm);
   if (rawHistory.length > 120) rawHistory.shift();
 
-  /* SMOOTH */
-  const last = smoothHistory.length
-    ? smoothHistory[smoothHistory.length - 1]
-    : rawWpm;
-
+  const last = smoothHistory.at(-1) || rawWpm;
   const smooth = last + (rawWpm - last) * 0.2;
 
   smoothHistory.push(smooth);
   if (smoothHistory.length > 120) smoothHistory.shift();
 
-  /* SPIKES */
   if (Math.abs(rawWpm - smooth) > 15) {
     spikeHistory.push(smoothHistory.length - 1);
   }
 
-  /* WPM MAP */
   wpmMapPoints.push({
     wpm: Math.round(smooth),
     index: smoothHistory.length - 1
@@ -190,7 +205,7 @@ function drawGraph() {
 
   const max = Math.max(...smoothHistory, 20);
 
-  /* SPEED ZONES */
+  /* ZONES */
   ctx.fillStyle = "rgba(255,0,0,0.05)";
   ctx.fillRect(0, 0, rect.width, 150 * 0.5);
 
@@ -200,27 +215,13 @@ function drawGraph() {
   ctx.fillStyle = "rgba(0,255,0,0.03)";
   ctx.fillRect(0, 150 * 0.2, rect.width, 150 * 0.8);
 
-  /* RAW LINE */
-  ctx.beginPath();
-  ctx.strokeStyle = "#777";
-  ctx.lineWidth = 1;
-
-  rawHistory.forEach((v, i) => {
-    const x = (i / (rawHistory.length - 1)) * rect.width;
-    const y = 150 - (v / max) * 150;
-
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-
-  ctx.stroke();
-
   /* SMOOTH LINE */
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
   ctx.lineWidth = 2;
 
   smoothHistory.forEach((v, i) => {
-    const x = (i / (smoothHistory.length - 1)) * rect.width;
+    const x = (i / smoothHistory.length) * rect.width;
     const y = 150 - (v / max) * 150;
 
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
@@ -228,25 +229,9 @@ function drawGraph() {
 
   ctx.stroke();
 
-  /* SPIKES */
-  ctx.fillStyle = "#ff4d4d";
-
-  spikeHistory.forEach(i => {
-    const v = smoothHistory[i];
-    if (!v) return;
-
-    const x = (i / smoothHistory.length) * rect.width;
-    const y = 150 - (v / max) * 150;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  /* WPM MAP (SHARP TEXT FIXED) */
+  /* WPM MAP */
   ctx.font = "12px Arial";
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
 
   wpmMapPoints.forEach(p => {
     const v = smoothHistory[p.index];
@@ -255,17 +240,14 @@ function drawGraph() {
     const x = (p.index / smoothHistory.length) * rect.width;
     const y = 150 - (v / max) * 150;
 
-    // dot
     ctx.fillStyle = "#fff";
     ctx.beginPath();
     ctx.arc(x, y, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // background for readability
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(x - 10, y - 14, 20, 12);
 
-    // text
     ctx.fillStyle = "#fff";
     ctx.fillText(p.wpm, x, y - 8);
   });
@@ -328,8 +310,8 @@ function pressKey(key, el) {
   updateTyped();
 
   if (el) {
-    el.style.background = "#4caf50";
-    setTimeout(() => el.style.background = "#1c1c25", 80);
+    el.style.transform = "scale(0.9)";
+    setTimeout(() => el.style.transform = "scale(1)", 80);
   }
 }
 
