@@ -83,8 +83,6 @@ function check() {
     const letters = wordSpan.querySelectorAll("span");
     const typedWord = typedWords[i] || "";
 
-    let wordCorrect = true;
-
     letters.forEach((letter, j) => {
       letter.classList.remove("correct", "wrong");
 
@@ -96,7 +94,6 @@ function check() {
         correctChars++;
       } else {
         letter.classList.add("wrong");
-        wordCorrect = false;
       }
     });
   });
@@ -132,7 +129,7 @@ function finishGame() {
   }
 }
 
-/* ================= GRAPH ================= */
+/* ================= GRAPH (FIXED + SHARP + WPM MAP) ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   if (!canvas) return;
@@ -140,10 +137,19 @@ function drawGraph() {
   const ctx = canvas.getContext("2d");
 
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = 150;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 🔥 FIX: sharp canvas scaling (NO BLUR)
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = 150 * dpr;
+
+  ctx.scale(dpr, dpr);
+
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = "150px";
+
+  ctx.clearRect(0, 0, rect.width, 150);
 
   if (!startTime) {
     animationFrame = requestAnimationFrame(drawGraph);
@@ -174,7 +180,7 @@ function drawGraph() {
     spikeHistory.push(smoothHistory.length - 1);
   }
 
-  /* WPM MAP (NEW FEATURE) */
+  /* WPM MAP */
   wpmMapPoints.push({
     wpm: Math.round(smooth),
     index: smoothHistory.length - 1
@@ -184,15 +190,15 @@ function drawGraph() {
 
   const max = Math.max(...smoothHistory, 20);
 
-  /* ZONES */
+  /* SPEED ZONES */
   ctx.fillStyle = "rgba(255,0,0,0.05)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height * 0.5);
+  ctx.fillRect(0, 0, rect.width, 150 * 0.5);
 
   ctx.fillStyle = "rgba(255,255,0,0.03)";
-  ctx.fillRect(0, canvas.height * 0.5, canvas.width, canvas.height * 0.3);
+  ctx.fillRect(0, 150 * 0.5, rect.width, 150 * 0.3);
 
   ctx.fillStyle = "rgba(0,255,0,0.03)";
-  ctx.fillRect(0, canvas.height * 0.2, canvas.width, canvas.height * 0.8);
+  ctx.fillRect(0, 150 * 0.2, rect.width, 150 * 0.8);
 
   /* RAW LINE */
   ctx.beginPath();
@@ -200,8 +206,8 @@ function drawGraph() {
   ctx.lineWidth = 1;
 
   rawHistory.forEach((v, i) => {
-    const x = (i / (rawHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const x = (i / (rawHistory.length - 1)) * rect.width;
+    const y = 150 - (v / max) * 150;
 
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
@@ -214,8 +220,8 @@ function drawGraph() {
   ctx.lineWidth = 2;
 
   smoothHistory.forEach((v, i) => {
-    const x = (i / (smoothHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const x = (i / (smoothHistory.length - 1)) * rect.width;
+    const y = 150 - (v / max) * 150;
 
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
@@ -229,31 +235,38 @@ function drawGraph() {
     const v = smoothHistory[i];
     if (!v) return;
 
-    const x = (i / smoothHistory.length) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const x = (i / smoothHistory.length) * rect.width;
+    const y = 150 - (v / max) * 150;
 
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  /* WPM MAP POINTS (NEW) */
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "10px monospace";
+  /* WPM MAP (SHARP TEXT FIXED) */
+  ctx.font = "12px Arial";
   ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
   wpmMapPoints.forEach(p => {
     const v = smoothHistory[p.index];
     if (!v) return;
 
-    const x = (p.index / smoothHistory.length) * canvas.width;
-    const y = canvas.height - (v / max) * canvas.height;
+    const x = (p.index / smoothHistory.length) * rect.width;
+    const y = 150 - (v / max) * 150;
 
+    // dot
+    ctx.fillStyle = "#fff";
     ctx.beginPath();
-    ctx.fillStyle = "#ffffff";
     ctx.arc(x, y, 2, 0, Math.PI * 2);
     ctx.fill();
 
+    // background for readability
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(x - 10, y - 14, 20, 12);
+
+    // text
+    ctx.fillStyle = "#fff";
     ctx.fillText(p.wpm, x, y - 8);
   });
 
