@@ -2,44 +2,66 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZType</title>
+  <title>TZType Ultra</title>
 
-  <link rel="stylesheet" href="style.css?v=2.0.0">
+  <link rel="stylesheet" href="style.css?v=3.0.0">
 </head>
 
 <body>
 
-<div class="app">
+<div class="layout">
 
-  <div class="top">
-    <span>WPM: <b id="wpm">0</b></span>
-    <span>Acc: <b id="accuracy">100</b>%</span>
-    <span>Best: <b id="highScore">0</b></span>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="title">Typing Game</div>
+
+    <button onclick="showPage('game')" class="active">Game</button>
+    <button onclick="showPage('history')">History</button>
   </div>
 
-  <div id="sentence" class="sentence"></div>
-  <div id="typed" class="typed" tabindex="0"></div>
+  <!-- CONTENT -->
+  <div class="content">
 
-  <div class="legend">
-    <span class="wpm-dot">● WPM</span>
-    <span class="acc-dot">● Accuracy</span>
+    <!-- GAME -->
+    <div class="app" id="gamePage">
+
+      <div class="top">
+        <span>WPM: <b id="wpm">0</b></span>
+        <span>Acc: <b id="accuracy">100</b>%</span>
+        <span>Best: <b id="highScore">0</b></span>
+      </div>
+
+      <div id="sentence" class="sentence"></div>
+      <div id="typed" class="typed" tabindex="0"></div>
+
+      <div class="legend">
+        <span class="wpm-dot">● WPM</span>
+        <span class="acc-dot">● Accuracy</span>
+      </div>
+
+      <canvas id="wpmChart"></canvas>
+
+      <div class="controls">
+        <button onclick="toggleMode()">Mode: <span id="modeLabel">Words</span></button>
+        <button onclick="toggleKeyboard()">Keyboard</button>
+        <span class="shortcut">TAB</span>
+      </div>
+
+      <div id="keyboard"></div>
+
+      <button onclick="startGame()">Start</button>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="app" id="historyPage" style="display:none;">
+      <h2>History</h2>
+      <div id="historyBox"></div>
+    </div>
+
   </div>
-
-  <canvas id="wpmChart"></canvas>
-
-  <div class="controls">
-    <button onclick="toggleMode()">Mode: <span id="modeLabel">Words</span></button>
-    <button onclick="toggleKeyboard()">Keyboard</button>
-    <span class="shortcut">TAB</span>
-  </div>
-
-  <div id="keyboard"></div>
-
-  <button onclick="startGame()">Start</button>
-
 </div>
 
-<script src="script.js?v=2.0.0"></script>
+<script src="script.js?v=3.0.0"></script>
 
 </body>
 </html>
