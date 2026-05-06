@@ -1,4 +1,4 @@
-console.log("Typing game running ✔");
+console.log("Typing game FULLY CONNECTED ✔");
 
 /* ================= STATE ================= */
 let typedText = "";
@@ -27,13 +27,14 @@ const sentences = [
 /* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
+  buildKeyboard(); // 🔥 ensure keyboard loads
 };
 
 /* ================= START ================= */
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
 
-  // 🔥 render words
+  // render sentence
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
       `<span class="word">${
@@ -148,6 +149,8 @@ function animateGraph() {
 
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
+  if (!canvas) return;
+
   const ctx = canvas.getContext("2d");
 
   canvas.width = canvas.offsetWidth;
@@ -194,7 +197,72 @@ function drawGraph() {
   ctx.stroke();
 }
 
-/* ================= KEYBOARD ================= */
+/* ================= KEYBOARD (BUILD) ================= */
+function buildKeyboard() {
+  const layout = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["Z","X","C","V","B","N","M"]
+  ];
+
+  const keyboard = document.getElementById("keyboard");
+  keyboard.innerHTML = "";
+
+  layout.forEach(row => {
+    const rowDiv = document.createElement("div");
+    rowDiv.className = "row";
+
+    row.forEach(letter => {
+      const key = document.createElement("div");
+      key.className = "key";
+      key.innerText = letter;
+
+      key.onclick = () => pressKey(letter.toLowerCase(), key);
+
+      rowDiv.appendChild(key);
+    });
+
+    keyboard.appendChild(rowDiv);
+  });
+
+  const bottom = document.createElement("div");
+  bottom.className = "row";
+
+  ["SPACE", "⌫"].forEach(type => {
+    const key = document.createElement("div");
+    key.className = "key wide";
+    key.innerText = type;
+
+    key.onclick = () => pressKey(type, key);
+
+    bottom.appendChild(key);
+  });
+
+  keyboard.appendChild(bottom);
+}
+
+/* ================= KEY PRESS HANDLER ================= */
+function pressKey(key, element) {
+  if (!startTime) startGame();
+
+  if (key === "⌫") {
+    typedText = typedText.slice(0, -1);
+  } else if (key === "SPACE") {
+    typedText += " ";
+  } else {
+    typedText += key;
+  }
+
+  updateTyped();
+
+  // animation
+  if (element) {
+    element.style.background = "#4caf50";
+    setTimeout(() => element.style.background = "#1c1c25", 80);
+  }
+}
+
+/* ================= PHYSICAL KEYBOARD ================= */
 document.addEventListener("keydown", e => {
   const finished = typedText === currentSentence;
 
@@ -206,19 +274,16 @@ document.addEventListener("keydown", e => {
       return;
     }
 
-    typedText += " ";
-    updateTyped();
+    pressKey("SPACE");
     return;
   }
 
   if (e.key === "Backspace") {
-    typedText = typedText.slice(0, -1);
-    updateTyped();
+    pressKey("⌫");
     return;
   }
 
   if (e.key.length === 1) {
-    typedText += e.key.toLowerCase();
-    updateTyped();
+    pressKey(e.key.toLowerCase());
   }
 });
