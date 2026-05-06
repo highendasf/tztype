@@ -5,100 +5,103 @@ body {
   color: #d0d0d0;
 }
 
-/* ================= LAYOUT ================= */
+/* ===== LAYOUT ===== */
 .layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* ================= SIDEBAR ================= */
+/* ===== SIDEBAR ===== */
 .sidebar {
   width: 210px;
   padding: 18px;
   background: rgba(18, 18, 26, 0.7);
-  border-right: 1px solid rgba(255,255,255,0.06);
   backdrop-filter: blur(10px);
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: 0.3s ease;
 }
 
-.sidebar .title {
-  font-size: 14px;
+.sidebar.hide {
+  transform: translateX(-100%);
+}
+
+.sidebar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
   font-weight: bold;
   color: #4caf50;
-  margin-bottom: 10px;
 }
 
-/* sidebar buttons */
 .sidebar button {
+  width: 100%;
+  margin-top: 10px;
   background: transparent;
-  color: #aaa;
   border: 1px solid rgba(255,255,255,0.08);
+  color: #aaa;
   padding: 10px;
   border-radius: 10px;
   cursor: pointer;
-  text-align: left;
-  transition: 0.2s;
-}
-
-.sidebar button:hover {
-  border-color: #4caf50;
-  color: #fff;
-  transform: translateX(3px);
 }
 
 .sidebar button.active {
   border-color: #4caf50;
   color: #4caf50;
-  box-shadow: 0 0 10px rgba(76,175,80,0.2);
 }
 
-/* ================= CONTENT ================= */
+/* HAMBURGER */
+.hamburger {
+  width: 28px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger span {
+  height: 3px;
+  background: #aaa;
+  border-radius: 2px;
+}
+
+/* ===== CONTENT ===== */
 .content {
   flex: 1;
-  padding: 30px;
+  padding: 20px;
 }
 
-/* ================= APP CARD ================= */
+/* ===== APP ===== */
 .app {
   max-width: 850px;
   margin: auto;
   padding: 22px;
-
   background: rgba(18,18,26,0.6);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
-
-  backdrop-filter: blur(10px);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
-/* ================= TOP STATS ================= */
+/* ===== TOP ===== */
 .top {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
-/* ================= TEXT AREA ================= */
+/* ===== TEXT ===== */
 .sentence {
   font-size: 22px;
   margin-bottom: 10px;
-  color: #ddd;
-  line-height: 1.6;
 }
 
 .typed {
-  border-bottom: 2px solid rgba(255,255,255,0.1);
-  height: 36px;
-  margin-bottom: 10px;
+  border-bottom: 2px solid #333;
+  height: 34px;
 }
 
-/* ================= CURSOR ================= */
+/* ===== CURSOR ===== */
 .cursor {
   border-right: 2px solid #4caf50;
   animation: blink 0.8s infinite;
@@ -108,68 +111,18 @@ body {
   50% { border-color: transparent; }
 }
 
-/* ================= LEGEND ================= */
-.legend {
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.wpm-dot { color: #4caf50; margin-right: 10px; }
-.acc-dot { color: #2196f3; }
-
-/* ================= GRAPH ================= */
+/* ===== GRAPH ===== */
 canvas {
   width: 100%;
   height: 170px;
-  margin-top: 10px;
-
-  background: rgba(10,10,14,0.8);
+  background: #12121a;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-
-  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+  margin-top: 10px;
 }
 
-/* ================= BUTTONS ================= */
-button {
-  background: #1c1c25;
-  color: #aaa;
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 8px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  border-color: #4caf50;
-  color: #fff;
-  transform: scale(1.02);
-}
-
-/* ================= CONTROLS ================= */
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* TAB hint */
-.shortcut {
-  background: #1c1c25;
-  border: 1px solid #333;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-/* ================= KEYBOARD ================= */
+/* ===== KEYBOARD ===== */
 #keyboard {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  margin-top: 10px;
 }
 
 .row {
@@ -182,29 +135,34 @@ button:hover {
   width: 38px;
   height: 44px;
   background: #1c1c25;
-  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
-
   display: flex;
-  align-items: center;
   justify-content: center;
-
-  transition: 0.15s;
+  align-items: center;
 }
 
-.key:active {
-  transform: scale(0.9);
-  border-color: #4caf50;
-  box-shadow: 0 0 10px rgba(76,175,80,0.2);
-}
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
 
-.key.wide {
-  width: 90px;
-}
+  .sidebar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
 
-/* ================= HISTORY ================= */
-#historyBox {
-  margin-top: 10px;
-  line-height: 1.8;
-  color: #aaa;
+  .content {
+    padding: 10px;
+  }
+
+  canvas {
+    height: 140px;
+  }
+
+  .key {
+    width: 30px;
+    height: 38px;
+  }
 }
