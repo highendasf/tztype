@@ -65,17 +65,17 @@ function startGame() {
       : sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
-  updateTyped();
-
   startTime = Date.now();
+
   startTimer();
+
+  renderSentence();
+  updateTyped();
 
   wpmHistory = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
-
-  renderSentence();
 }
 
 /* ================= WORD GENERATOR ================= */
@@ -94,10 +94,10 @@ function renderSentence() {
       `<span class="word">${
         word.split("").map(c => `<span class="letter">${c}</span>`).join("")
       }</span>`
-    ).join("");
+    ).join(" ");
 }
 
-/* ================= WPM CALC ================= */
+/* ================= WPM ================= */
 function calculateWPM() {
   const timeSec = (Date.now() - startTime) / 1000;
   if (timeSec < 1) return 0;
@@ -123,8 +123,28 @@ function pressKey(key) {
 
 /* ================= UPDATE + HIGHLIGHT ================= */
 function updateTyped() {
-  document.getElementById("typed").innerText = typedText;
+  const el = document.getElementById("typed");
 
+  /* ✅ OPTIONAL MODE SWITCH */
+  const showVisibleSpaces = true; // 🔥 toggle this
+
+  el.innerHTML = typedText
+    .split("")
+    .map(c => {
+      if (c === " ") {
+        return showVisibleSpaces
+          ? `<span class="space">·</span>`
+          : "&nbsp;";
+      }
+      return c;
+    })
+    .join("");
+
+  highlight();
+}
+
+/* ================= HIGHLIGHT ================= */
+function highlight() {
   const wordsEl = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
 
@@ -254,15 +274,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
 
-/* ================= TOGGLE KEYBOARD ================= */
+/* ================= TOGGLE ================= */
 document.getElementById("toggleKeyboardBtn").onclick = () => {
   document.getElementById("keyboard").classList.toggle("hidden");
 };
-
-/* TAB SHORTCUT */
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Tab") {
-    e.preventDefault();
-    document.getElementById("keyboard").classList.toggle("hidden");
-  }
-});
