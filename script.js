@@ -1,6 +1,6 @@
-console.log("FINAL BUILD ✔");
+console.log("Typing app FULLY CONNECTED ✔");
 
-/* STATE */
+/* ================= STATE ================= */
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
@@ -9,13 +9,12 @@ let timer = null;
 let correctChars = 0;
 let totalChars = 0;
 
-let wpmHistory = [];
 let smoothHistory = [];
 let animationFrame = null;
 
 let highScore = localStorage.getItem("highScore") || 0;
 
-/* SENTENCES */
+/* ================= SENTENCES ================= */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day to improve speed",
@@ -24,16 +23,17 @@ const sentences = [
   "never stop learning new skills"
 ];
 
-/* INIT */
+/* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
-  buildKeyboard();
+  buildKeyboard(); // 🔥 KEYBOARD CONNECTED HERE
 };
 
-/* START */
+/* ================= START GAME ================= */
 function startGame() {
   currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
 
+  // render sentence
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
       `<span class="word">${
@@ -55,20 +55,19 @@ function startGame() {
       Math.floor((Date.now() - startTime) / 1000);
   }, 1000);
 
-  wpmHistory = [];
   smoothHistory = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* UPDATE */
+/* ================= UPDATE ================= */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
   check();
 }
 
-/* CHECK */
+/* ================= CHECK ================= */
 function check() {
   const words = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
@@ -79,6 +78,8 @@ function check() {
   words.forEach((wordSpan, i) => {
     const letters = wordSpan.querySelectorAll("span");
     const typedWord = typedWords[i] || "";
+
+    let wordCorrect = true;
 
     letters.forEach((letter, j) => {
       letter.classList.remove("correct", "wrong");
@@ -91,6 +92,7 @@ function check() {
         correctChars++;
       } else {
         letter.classList.add("wrong");
+        wordCorrect = false;
       }
     });
   });
@@ -100,7 +102,7 @@ function check() {
   if (typedText === currentSentence) finishGame();
 }
 
-/* ACCURACY */
+/* ================= ACCURACY ================= */
 function updateAccuracy() {
   const acc = totalChars === 0
     ? 100
@@ -109,7 +111,7 @@ function updateAccuracy() {
   document.getElementById("accuracy").innerText = acc;
 }
 
-/* FINISH */
+/* ================= FINISH ================= */
 function finishGame() {
   clearInterval(timer);
   cancelAnimationFrame(animationFrame);
@@ -126,12 +128,15 @@ function finishGame() {
   }
 }
 
-/* GRAPH */
+/* ================= GRAPH ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
+  if (!canvas) return;
+
   const ctx = canvas.getContext("2d");
 
-  canvas.width = canvas.offsetWidth;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
   canvas.height = 150;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -141,25 +146,29 @@ function drawGraph() {
   const time = (Date.now() - startTime) / 1000;
   if (time < 0.3) return;
 
-  const wpm = (typedText.length / 5) / (time / 60);
+  const chars = typedText.length;
+  const wpm = (chars / 5) / (time / 60);
 
-  const last = smoothHistory.length
-    ? smoothHistory[smoothHistory.length - 1]
-    : wpm;
+  smoothHistory.push(wpm);
+  if (smoothHistory.length > 150) smoothHistory.shift();
 
-  const smooth = last + (wpm - last) * 0.2;
+  if (smoothHistory.length < 2) {
+    animationFrame = requestAnimationFrame(drawGraph);
+    return;
+  }
 
-  smoothHistory.push(smooth);
-  if (smoothHistory.length > 120) smoothHistory.shift();
+  const max = Math.max(...smoothHistory, 20);
 
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
+  ctx.lineWidth = 2;
 
   smoothHistory.forEach((v, i) => {
     const x = (i / (smoothHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / 100) * canvas.height;
+    const y = canvas.height - (v / max) * canvas.height;
 
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
 
   ctx.stroke();
@@ -167,7 +176,7 @@ function drawGraph() {
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* KEYBOARD BUILD */
+/* ================= KEYBOARD ================= */
 function buildKeyboard() {
   const layout = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -211,7 +220,7 @@ function buildKeyboard() {
   keyboard.appendChild(bottom);
 }
 
-/* KEY PRESS */
+/* ================= KEY PRESS ================= */
 function pressKey(key, el) {
   if (!startTime) startGame();
 
@@ -227,7 +236,7 @@ function pressKey(key, el) {
   }
 }
 
-/* PHYSICAL KEYS */
+/* ================= PHYSICAL KEYBOARD ================= */
 document.addEventListener("keydown", e => {
   if (e.key === "Backspace") return pressKey("⌫");
   if (e.key === " ") return pressKey("SPACE");
