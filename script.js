@@ -1,4 +1,4 @@
-console.log("TZType Dual Graph ✔");
+console.log("TZType FULL SYSTEM ✔");
 
 let typedText = "";
 let currentSentence = "";
@@ -6,21 +6,30 @@ let startTime = null;
 let finished = false;
 let cursorIndex = 0;
 
+let mode = "words";
+
 let highScore = localStorage.getItem("highScore") || 0;
 
 let wpmHistory = [];
 let accuracyHistory = [];
-let animationFrame;
-let smoothWPM = 0;
 
+let smoothWPM = 0;
+let smoothAcc = 100;
+
+let animationFrame;
 let keyboardVisible = true;
 
 /* DATA */
+const wordBank = [
+  "apple","banana","keyboard","screen","typing","speed",
+  "accuracy","focus","practice","javascript","coding","react"
+];
+
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
-  "practice typing every day",
-  "javascript makes websites interactive",
-  "focus on accuracy before speed",
+  "practice typing every day to improve speed",
+  "javascript makes websites interactive and dynamic",
+  "focus on accuracy before increasing speed",
   "clean code is better than clever code"
 ];
 
@@ -28,8 +37,14 @@ const sentences = [
 function startGame() {
   finished = false;
 
-  currentSentence =
-    sentences[Math.floor(Math.random() * sentences.length)];
+  if (mode === "words") {
+    currentSentence = Array.from({ length: 15 }, () =>
+      wordBank[Math.floor(Math.random() * wordBank.length)]
+    ).join(" ");
+  } else {
+    currentSentence =
+      sentences[Math.floor(Math.random() * sentences.length)];
+  }
 
   typedText = "";
   cursorIndex = 0;
@@ -40,7 +55,9 @@ function startGame() {
 
   wpmHistory = [];
   accuracyHistory = [];
+
   smoothWPM = 0;
+  smoothAcc = 100;
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
@@ -66,7 +83,7 @@ function getWPM() {
   const chars = typedText.length;
   const raw = (chars / 5) / (time / 60);
 
-  smoothWPM += (raw - smoothWPM) * 0.2;
+  smoothWPM += (raw - smoothWPM) * 0.08;
 
   return Math.round(smoothWPM);
 }
@@ -79,9 +96,12 @@ function getAccuracy() {
     if (typedText[i] === currentSentence[i]) correct++;
   }
 
-  if (typedText.length === 0) return 100;
+  let raw = typedText.length === 0 ? 100 :
+    (correct / typedText.length) * 100;
 
-  return Math.round((correct / typedText.length) * 100);
+  smoothAcc += (raw - smoothAcc) * 0.1;
+
+  return Math.round(smoothAcc);
 }
 
 /* INPUT */
@@ -188,33 +208,49 @@ function drawGraph() {
 
   const maxWPM = Math.max(...wpmHistory, 20);
 
-  /* WPM LINE */
-  ctx.beginPath();
-  ctx.strokeStyle = "#4caf50";
-
-  wpmHistory.forEach((v, i) => {
-    const x = (i / (wpmHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / maxWPM) * canvas.height;
-
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-
-  ctx.stroke();
-
-  /* ACCURACY LINE */
-  ctx.beginPath();
-  ctx.strokeStyle = "#2196f3";
-
-  accuracyHistory.forEach((v, i) => {
-    const x = (i / (accuracyHistory.length - 1)) * canvas.width;
-    const y = canvas.height - (v / 100) * canvas.height;
-
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-
-  ctx.stroke();
+  drawArea(wpmHistory, maxWPM, "#4caf50", "rgba(76,175,80,0.3)");
+  drawArea(accuracyHistory, 100, "#2196f3", "rgba(33,150,243,0.3)");
 
   animationFrame = requestAnimationFrame(drawGraph);
+}
+
+/* SMOOTH AREA GRAPH */
+function drawArea(data, max, stroke, fill) {
+  const canvas = document.getElementById("wpmChart");
+  const ctx = canvas.getContext("2d");
+
+  if (data.length < 2) return;
+
+  ctx.beginPath();
+
+  ctx.moveTo(0, canvas.height);
+
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * canvas.width;
+    const y = canvas.height - (v / max) * canvas.height;
+
+    const cx = (x + (i > 0 ? (i-1)/(data.length-1)*canvas.width : x)) / 2;
+
+    ctx.quadraticCurveTo(x, y, cx, y);
+  });
+
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.closePath();
+
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  ctx.strokeStyle = stroke;
+  ctx.stroke();
+}
+
+/* MODE */
+function toggleMode() {
+  mode = mode === "words" ? "sentences" : "words";
+  document.getElementById("modeLabel").innerText =
+    mode === "words" ? "Words" : "Sentences";
+
+  startGame();
 }
 
 /* KEYBOARD */
