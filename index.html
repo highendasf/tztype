@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Typing Game</title>
-
+  <title>Typing App</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -16,14 +15,13 @@
   <div class="top">
     <span><b id="wpm">0</b> WPM</span>
     <span><b id="time">0</b>s</span>
-    <span>acc: <b id="accuracy">100</b>%</span>
     <span>best: <b id="highScore">0</b></span>
   </div>
 
-  <!-- MODE SWITCH -->
+  <!-- MODE -->
   <div class="mode">
-    <button id="sentenceModeBtn">Sentence Mode</button>
-    <button id="wordModeBtn">Word Mode</button>
+    <button id="sentenceModeBtn">Sentence</button>
+    <button id="wordModeBtn">Words</button>
   </div>
 
   <!-- TEXT -->
@@ -31,12 +29,10 @@
   <div id="typed" class="typed"></div>
 
   <button onclick="startGame()">Start</button>
+  <button id="toggleKeyboardBtn">Hide Keyboard</button>
 
   <!-- GRAPH -->
   <canvas id="wpmChart"></canvas>
-
-  <!-- TOGGLE KEYBOARD -->
-  <button id="toggleKeyboardBtn">Hide Keyboard</button>
 
   <!-- KEYBOARD -->
   <div id="keyboard"></div>
