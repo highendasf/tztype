@@ -1,26 +1,17 @@
-console.log("Typing App FULL FIX ✔");
+console.log("Typing App FULL CONNECTED ✔");
 
-/* ================= STATE ================= */
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
 let finished = false;
-let mode = "sentence";
+let cursorIndex = 0;
 
 let highScore = localStorage.getItem("highScore") || 0;
 
-/* GRAPH */
 let wpmHistory = [];
 let animationFrame;
-let timerInterval = null;
 
 /* ================= DATA ================= */
-const words = [
-  "the","quick","brown","fox","jumps","typing","speed","code",
-  "learn","focus","javascript","function","variable","array",
-  "developer","debug","error","logic","system"
-];
-
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day",
@@ -32,62 +23,29 @@ const sentences = [
 /* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
-
-  setupMode();
   buildKeyboard();
 };
 
-/* ================= MODE ================= */
-function setupMode() {
-  document.getElementById("sentenceModeBtn").onclick = () => mode = "sentence";
-  document.getElementById("wordModeBtn").onclick = () => mode = "word";
-}
-
-/* ================= TIMER ================= */
-function startTimer() {
-  clearInterval(timerInterval);
-
-  timerInterval = setInterval(() => {
-    if (!startTime) return;
-
-    const sec = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById("time").innerText = sec;
-  }, 200);
-}
-
-/* ================= START GAME ================= */
+/* ================= START ================= */
 function startGame() {
   finished = false;
 
   currentSentence =
-    mode === "word"
-      ? generateWords(12)
-      : sentences[Math.floor(Math.random() * sentences.length)];
+    sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
+  cursorIndex = 0;
   startTime = Date.now();
-
-  startTimer();
 
   renderSentence();
   updateTyped();
 
   wpmHistory = [];
-
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= WORD GENERATOR ================= */
-function generateWords(n) {
-  let out = [];
-  for (let i = 0; i < n; i++) {
-    out.push(words[Math.floor(Math.random() * words.length)]);
-  }
-  return out.join(" ");
-}
-
-/* ================= RENDER SENTENCE ================= */
+/* ================= RENDER ================= */
 function renderSentence() {
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
@@ -98,12 +56,12 @@ function renderSentence() {
 }
 
 /* ================= WPM ================= */
-function calculateWPM() {
-  const timeSec = (Date.now() - startTime) / 1000;
-  if (timeSec < 1) return 0;
+function getWPM() {
+  const time = (Date.now() - startTime) / 1000;
+  if (time < 1) return 0;
 
-  const wordsTyped = typedText.trim().split(/\s+/).length;
-  return Math.round((wordsTyped / timeSec) * 60);
+  const words = typedText.trim().split(/\s+/).length;
+  return Math.round((words / time) * 60);
 }
 
 /* ================= INPUT ================= */
@@ -112,33 +70,35 @@ function pressKey(key) {
 
   if (!startTime) startGame();
 
-  if (key === "⌫") typedText = typedText.slice(0, -1);
-  else if (key === "SPACE") typedText += " ";
-  else typedText += key;
+  if (key === "⌫") {
+    typedText = typedText.slice(0, -1);
+    cursorIndex = Math.max(0, cursorIndex - 1);
+  }
+  else if (key === "SPACE") {
+    typedText += " ";
+    cursorIndex++;
+  }
+  else {
+    typedText += key;
+    cursorIndex++;
+  }
 
   updateTyped();
 
   if (typedText === currentSentence) finishGame();
 }
 
-/* ================= UPDATE + HIGHLIGHT ================= */
+/* ================= UPDATE + CURSOR ================= */
 function updateTyped() {
-  const el = document.getElementById("typed");
+  document.getElementById("typed").innerHTML =
+    typedText.split("").map((c, i) => {
+      const display = c === " " ? "·" : c;
 
-  /* ✅ OPTIONAL MODE SWITCH */
-  const showVisibleSpaces = true; // 🔥 toggle this
-
-  el.innerHTML = typedText
-    .split("")
-    .map(c => {
-      if (c === " ") {
-        return showVisibleSpaces
-          ? `<span class="space">·</span>`
-          : "&nbsp;";
+      if (i === cursorIndex && !finished) {
+        return `<span class="cursor">${display}</span>`;
       }
-      return c;
-    })
-    .join("");
+      return display;
+    }).join("");
 
   highlight();
 }
@@ -172,12 +132,13 @@ function highlight() {
 function finishGame() {
   finished = true;
 
-  const wpm = calculateWPM();
+  const wpm = getWPM();
+
   document.getElementById("wpm").innerText = wpm;
 
   if (wpm > highScore) {
     highScore = wpm;
-    localStorage.setItem("highScore", highScore);
+    localStorage.setItem("highScore", wpm);
     document.getElementById("highScore").innerText = wpm;
   }
 }
@@ -197,7 +158,7 @@ function drawGraph() {
     return;
   }
 
-  const wpm = calculateWPM();
+  const wpm = getWPM();
 
   wpmHistory.push(wpm);
   if (wpmHistory.length > 120) wpmHistory.shift();
@@ -229,7 +190,6 @@ function buildKeyboard() {
   ];
 
   const kb = document.getElementById("keyboard");
-  kb.innerHTML = "";
 
   layout.forEach(row => {
     const div = document.createElement("div");
@@ -260,7 +220,7 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* ================= KEYBOARD INPUT ================= */
+/* ================= KEY INPUT ================= */
 document.addEventListener("keydown", (e) => {
   if (finished) return;
 
@@ -273,8 +233,3 @@ document.addEventListener("keydown", (e) => {
 
   if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
-
-/* ================= TOGGLE ================= */
-document.getElementById("toggleKeyboardBtn").onclick = () => {
-  document.getElementById("keyboard").classList.toggle("hidden");
-};
