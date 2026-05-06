@@ -1,4 +1,4 @@
-console.log("Typing app FULLY CONNECTED ✔");
+console.log("Typing App FULLY CONNECTED ✔");
 
 /* ================= STATE ================= */
 let typedText = "";
@@ -26,7 +26,7 @@ const sentences = [
 /* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
-  buildKeyboard(); // 🔥 KEYBOARD CONNECTED HERE
+  buildKeyboard(); // 🔥 IMPORTANT: KEYBOARD CONNECTED HERE
 };
 
 /* ================= START GAME ================= */
@@ -128,7 +128,7 @@ function finishGame() {
   }
 }
 
-/* ================= GRAPH ================= */
+/* ================= GRAPH (FIXED + SMOOTH) ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   if (!canvas) return;
@@ -141,16 +141,31 @@ function drawGraph() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!startTime) return;
+  if (!startTime) {
+    animationFrame = requestAnimationFrame(drawGraph);
+    return;
+  }
 
   const time = (Date.now() - startTime) / 1000;
-  if (time < 0.3) return;
+  if (time < 0.3) {
+    animationFrame = requestAnimationFrame(drawGraph);
+    return;
+  }
 
   const chars = typedText.length;
-  const wpm = (chars / 5) / (time / 60);
+  const rawWpm = (chars / 5) / (time / 60);
 
-  smoothHistory.push(wpm);
-  if (smoothHistory.length > 150) smoothHistory.shift();
+  const last = smoothHistory.length
+    ? smoothHistory[smoothHistory.length - 1]
+    : rawWpm;
+
+  const smooth = last + (rawWpm - last) * 0.2;
+
+  smoothHistory.push(smooth);
+
+  if (smoothHistory.length > 120) {
+    smoothHistory.shift();
+  }
 
   if (smoothHistory.length < 2) {
     animationFrame = requestAnimationFrame(drawGraph);
@@ -160,8 +175,8 @@ function drawGraph() {
   const max = Math.max(...smoothHistory, 20);
 
   ctx.beginPath();
-  ctx.strokeStyle = "#4caf50";
   ctx.lineWidth = 2;
+  ctx.strokeStyle = "#4caf50";
 
   smoothHistory.forEach((v, i) => {
     const x = (i / (smoothHistory.length - 1)) * canvas.width;
