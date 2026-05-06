@@ -1,4 +1,4 @@
-console.log("Typing App Loaded ✔");
+console.log("Typing App FULL CONNECTED ✔");
 
 /* STATE */
 let typedText = "";
@@ -7,9 +7,20 @@ let startTime = null;
 let finished = false;
 let mode = "sentence";
 
-/* DATA */
-const words = ["the","quick","brown","fox","jumps","typing","speed","code","learn","focus"];
+let highScore = localStorage.getItem("highScore") || 0;
 
+/* GRAPH */
+let wpmHistory = [];
+let animationFrame;
+
+/* WORD BANK */
+const words = [
+  "the","quick","brown","fox","jumps","typing","speed","code",
+  "learn","focus","javascript","function","variable","array",
+  "developer","debug","error","logic","system"
+];
+
+/* SENTENCES */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day",
@@ -20,6 +31,8 @@ const sentences = [
 
 /* INIT */
 window.onload = () => {
+  document.getElementById("highScore").innerText = highScore;
+
   setupMode();
   buildKeyboard();
 };
@@ -42,17 +55,29 @@ function startGame() {
   typedText = "";
   startTime = Date.now();
 
-  document.getElementById("sentence").innerText = currentSentence;
-  updateTyped();
+  renderSentence();
+
+  cancelAnimationFrame(animationFrame);
+  animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* WORD GEN */
+/* WORD GENERATOR */
 function generateWords(n) {
   let out = [];
   for (let i = 0; i < n; i++) {
     out.push(words[Math.floor(Math.random() * words.length)]);
   }
   return out.join(" ");
+}
+
+/* RENDER SENTENCE (IMPORTANT FOR HIGHLIGHTING) */
+function renderSentence() {
+  document.getElementById("sentence").innerHTML =
+    currentSentence.split(" ").map(word =>
+      `<span class="word">${
+        word.split("").map(c => `<span class="letter">${c}</span>`).join("")
+      }</span>`
+    ).join(" ");
 }
 
 /* INPUT */
@@ -67,23 +92,89 @@ function pressKey(key) {
 
   updateTyped();
 
-  if (typedText === currentSentence) {
-    finishGame();
-    finished = true;
-  }
+  if (typedText === currentSentence) finishGame();
 }
 
-/* DISPLAY */
+/* UPDATE + HIGHLIGHT */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
+
+  const wordsEl = document.querySelectorAll(".word");
+  const typedWords = typedText.split(" ");
+
+  wordsEl.forEach((wordEl, i) => {
+    const letters = wordEl.querySelectorAll(".letter");
+    const typedWord = typedWords[i] || "";
+
+    letters.forEach((letter, j) => {
+      const char = typedWord[j];
+
+      letter.classList.remove("correct", "wrong");
+
+      if (!char) return;
+
+      if (char === letter.innerText) {
+        letter.classList.add("correct");
+      } else {
+        letter.classList.add("wrong");
+      }
+    });
+  });
 }
 
 /* FINISH */
 function finishGame() {
+  finished = true;
+
   const time = (Date.now() - startTime) / 1000;
   const wpm = Math.round((typedText.length / 5) / (time / 60));
 
   document.getElementById("wpm").innerText = wpm;
+
+  if (wpm > highScore) {
+    highScore = wpm;
+    localStorage.setItem("highScore", highScore);
+    document.getElementById("highScore").innerText = highScore;
+  }
+}
+
+/* GRAPH */
+function drawGraph() {
+  const canvas = document.getElementById("wpmChart");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 150;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!startTime) {
+    animationFrame = requestAnimationFrame(drawGraph);
+    return;
+  }
+
+  const time = (Date.now() - startTime) / 1000;
+  const wpm = Math.round((typedText.length / 5) / (time / 60));
+
+  wpmHistory.push(wpm);
+  if (wpmHistory.length > 120) wpmHistory.shift();
+
+  const max = Math.max(...wpmHistory, 20);
+
+  ctx.beginPath();
+  ctx.strokeStyle = "#4caf50";
+  ctx.lineWidth = 2;
+
+  wpmHistory.forEach((v, i) => {
+    const x = (i / wpmHistory.length) * canvas.width;
+    const y = canvas.height - (v / max) * canvas.height;
+
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+
+  animationFrame = requestAnimationFrame(drawGraph);
 }
 
 /* KEYBOARD */
@@ -126,7 +217,7 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* KEYBOARD INPUT */
+/* PHYSICAL KEYBOARD */
 document.addEventListener("keydown", (e) => {
   if (finished) return;
 
@@ -137,22 +228,18 @@ document.addEventListener("keydown", (e) => {
     return pressKey("SPACE");
   }
 
-  if (e.key.length === 1) {
-    pressKey(e.key.toLowerCase());
-  }
+  if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
 
 /* TOGGLE KEYBOARD */
-function toggleKeyboard() {
+document.getElementById("toggleKeyboardBtn").onclick = () => {
   document.getElementById("keyboard").classList.toggle("hidden");
-}
-
-document.getElementById("toggleKeyboardBtn").onclick = toggleKeyboard;
+};
 
 /* TAB SHORTCUT */
 document.addEventListener("keydown", (e) => {
   if (e.key === "Tab") {
     e.preventDefault();
-    toggleKeyboard();
+    document.getElementById("keyboard").classList.toggle("hidden");
   }
 });
