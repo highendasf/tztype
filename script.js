@@ -1,6 +1,6 @@
-console.log("Typing App FULL CONNECTED ✔");
+console.log("Typing App FULL FIX ✔");
 
-/* STATE */
+/* ================= STATE ================= */
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
@@ -12,15 +12,15 @@ let highScore = localStorage.getItem("highScore") || 0;
 /* GRAPH */
 let wpmHistory = [];
 let animationFrame;
+let timerInterval = null;
 
-/* WORD BANK */
+/* ================= DATA ================= */
 const words = [
   "the","quick","brown","fox","jumps","typing","speed","code",
   "learn","focus","javascript","function","variable","array",
   "developer","debug","error","logic","system"
 ];
 
-/* SENTENCES */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day",
@@ -29,7 +29,7 @@ const sentences = [
   "clean code is better than clever code"
 ];
 
-/* INIT */
+/* ================= INIT ================= */
 window.onload = () => {
   document.getElementById("highScore").innerText = highScore;
 
@@ -37,13 +37,25 @@ window.onload = () => {
   buildKeyboard();
 };
 
-/* MODE */
+/* ================= MODE ================= */
 function setupMode() {
   document.getElementById("sentenceModeBtn").onclick = () => mode = "sentence";
   document.getElementById("wordModeBtn").onclick = () => mode = "word";
 }
 
-/* START */
+/* ================= TIMER ================= */
+function startTimer() {
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    if (!startTime) return;
+
+    const sec = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById("time").innerText = sec;
+  }, 200);
+}
+
+/* ================= START GAME ================= */
 function startGame() {
   finished = false;
 
@@ -53,15 +65,20 @@ function startGame() {
       : sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
-  startTime = Date.now();
+  updateTyped();
 
-  renderSentence();
+  startTime = Date.now();
+  startTimer();
+
+  wpmHistory = [];
 
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
+
+  renderSentence();
 }
 
-/* WORD GENERATOR */
+/* ================= WORD GENERATOR ================= */
 function generateWords(n) {
   let out = [];
   for (let i = 0; i < n; i++) {
@@ -70,17 +87,26 @@ function generateWords(n) {
   return out.join(" ");
 }
 
-/* RENDER SENTENCE (IMPORTANT FOR HIGHLIGHTING) */
+/* ================= RENDER SENTENCE ================= */
 function renderSentence() {
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
       `<span class="word">${
         word.split("").map(c => `<span class="letter">${c}</span>`).join("")
       }</span>`
-    ).join(" ");
+    ).join("");
 }
 
-/* INPUT */
+/* ================= WPM CALC ================= */
+function calculateWPM() {
+  const timeSec = (Date.now() - startTime) / 1000;
+  if (timeSec < 1) return 0;
+
+  const wordsTyped = typedText.trim().split(/\s+/).length;
+  return Math.round((wordsTyped / timeSec) * 60);
+}
+
+/* ================= INPUT ================= */
 function pressKey(key) {
   if (finished) return;
 
@@ -95,7 +121,7 @@ function pressKey(key) {
   if (typedText === currentSentence) finishGame();
 }
 
-/* UPDATE + HIGHLIGHT */
+/* ================= UPDATE + HIGHLIGHT ================= */
 function updateTyped() {
   document.getElementById("typed").innerText = typedText;
 
@@ -122,23 +148,21 @@ function updateTyped() {
   });
 }
 
-/* FINISH */
+/* ================= FINISH ================= */
 function finishGame() {
   finished = true;
 
-  const time = (Date.now() - startTime) / 1000;
-  const wpm = Math.round((typedText.length / 5) / (time / 60));
-
+  const wpm = calculateWPM();
   document.getElementById("wpm").innerText = wpm;
 
   if (wpm > highScore) {
     highScore = wpm;
     localStorage.setItem("highScore", highScore);
-    document.getElementById("highScore").innerText = highScore;
+    document.getElementById("highScore").innerText = wpm;
   }
 }
 
-/* GRAPH */
+/* ================= GRAPH ================= */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
@@ -153,8 +177,7 @@ function drawGraph() {
     return;
   }
 
-  const time = (Date.now() - startTime) / 1000;
-  const wpm = Math.round((typedText.length / 5) / (time / 60));
+  const wpm = calculateWPM();
 
   wpmHistory.push(wpm);
   if (wpmHistory.length > 120) wpmHistory.shift();
@@ -177,7 +200,7 @@ function drawGraph() {
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* KEYBOARD */
+/* ================= KEYBOARD ================= */
 function buildKeyboard() {
   const layout = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -217,7 +240,7 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* PHYSICAL KEYBOARD */
+/* ================= KEYBOARD INPUT ================= */
 document.addEventListener("keydown", (e) => {
   if (finished) return;
 
@@ -231,7 +254,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
 
-/* TOGGLE KEYBOARD */
+/* ================= TOGGLE KEYBOARD ================= */
 document.getElementById("toggleKeyboardBtn").onclick = () => {
   document.getElementById("keyboard").classList.toggle("hidden");
 };
