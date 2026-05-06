@@ -2,9 +2,8 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZType Ultra</title>
-
-  <link rel="stylesheet" href="style.css?v=3.0.0">
+  <title>TZType</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -13,7 +12,16 @@
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="title">Typing Game</div>
+
+    <div class="sidebar-top">
+      <div class="title">Typing Game</div>
+
+      <div class="hamburger" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
 
     <button onclick="showPage('game')" class="active">Game</button>
     <button onclick="showPage('history')">History</button>
@@ -61,7 +69,7 @@
   </div>
 </div>
 
-<script src="script.js?v=3.0.0"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
