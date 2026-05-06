@@ -52,7 +52,16 @@ canvas {
   margin-bottom: 10px;
 }
 
-/* BUTTON FIX */
+/* LEGEND */
+.legend {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.wpm-dot { color: #4caf50; margin-right: 10px; }
+.acc-dot { color: #2196f3; }
+
+/* BUTTON */
 button {
   background: #1c1c25;
   color: #aaa;
@@ -65,6 +74,23 @@ button {
 
 button:hover {
   background: #2a2a38;
+}
+
+/* TAB LABEL */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.shortcut {
+  background: #1c1c25;
+  border: 1px solid #333;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 /* KEYBOARD */
