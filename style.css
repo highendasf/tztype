@@ -15,7 +15,6 @@ body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-  color: #777;
 }
 
 .sentence {
@@ -61,7 +60,7 @@ canvas {
 .wpm-dot { color: #4caf50; margin-right: 10px; }
 .acc-dot { color: #2196f3; }
 
-/* BUTTON */
+/* BUTTONS */
 button {
   background: #1c1c25;
   color: #aaa;
@@ -69,28 +68,27 @@ button {
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 button:hover {
   background: #2a2a38;
 }
 
-/* TAB LABEL */
+/* CONTROLS */
 .controls {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
 }
 
+/* TAB HINT */
 .shortcut {
   background: #1c1c25;
   border: 1px solid #333;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
-  opacity: 0.8;
 }
 
 /* KEYBOARD */
@@ -115,7 +113,6 @@ button:hover {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  cursor: pointer;
 }
 
 .key:active {
