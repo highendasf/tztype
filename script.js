@@ -2,12 +2,8 @@ let typedText = "";
 let currentSentence = "";
 let startTime = null;
 let finished = false;
-let cursorIndex = 0;
 
 let mode = "words";
-let menuOpen = true;
-
-let highScore = localStorage.getItem("highScore") || 0;
 
 let wpmHistory = [];
 let accuracyHistory = [];
@@ -15,62 +11,81 @@ let accuracyHistory = [];
 let smoothWPM = 0;
 let smoothAcc = 100;
 
-let animationFrame;
-
 /* DATA */
-const wordBank = ["apple","banana","keyboard","typing","speed","code","focus","react"];
+const words = ["apple","banana","code","speed","typing","focus","keyboard"];
+
 const sentences = [
-  "the quick brown fox jumps over the lazy dog",
   "practice typing every day",
-  "javascript makes websites interactive"
+  "javascript makes websites interactive",
+  "focus on accuracy first"
 ];
 
 /* START */
 function startGame() {
   finished = false;
 
-  currentSentence = mode === "words"
-    ? Array.from({ length: 15 }, () =>
-        wordBank[Math.floor(Math.random() * wordBank.length)]
-      ).join(" ")
-    : sentences[Math.floor(Math.random() * sentences.length)];
+  currentSentence =
+    mode === "words"
+      ? Array.from({ length: 12 }, () =>
+          words[Math.floor(Math.random() * words.length)]
+        ).join(" ")
+      : sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
-  cursorIndex = 0;
   startTime = Date.now();
 
-  renderSentence();
-  updateTyped();
-
-  wpmHistory = [];
-  accuracyHistory = [];
-
-  cancelAnimationFrame(animationFrame);
-  animationFrame = requestAnimationFrame(drawGraph);
+  render();
+  update();
 }
 
 /* RENDER */
-function renderSentence() {
+function render() {
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(w =>
       `<span class="word">${w}</span>`
     ).join(" ");
 }
 
+/* INPUT */
+document.addEventListener("keydown", (e) => {
+  if (finished) return;
+
+  if (!startTime) startGame();
+
+  if (e.key === "Backspace") {
+    typedText = typedText.slice(0, -1);
+  } else if (e.key === " ") {
+    e.preventDefault();
+    typedText += " ";
+  } else if (e.key.length === 1) {
+    typedText += e.key;
+  }
+
+  update();
+});
+
+/* UPDATE */
+function update() {
+  document.getElementById("typed").innerText = typedText;
+
+  document.getElementById("wpm").innerText = getWPM();
+  document.getElementById("accuracy").innerText = getAcc();
+
+  highlight();
+}
+
 /* FIXED HIGHLIGHT */
 function highlight() {
-  const words = document.querySelectorAll(".word");
+  const wordsEl = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
 
-  words.forEach((w, i) => {
-    const typed = typedWords[i] || "";
+  wordsEl.forEach((el, i) => {
+    if (typedWords[i] === undefined) return;
 
-    if (!typed) return;
-
-    if (typed !== w.innerText) {
-      w.style.color = "#ff4d4d";
+    if (typedWords[i] === el.innerText) {
+      el.style.color = "#4caf50";
     } else {
-      w.style.color = "#4caf50";
+      el.style.color = "#ff4d4d";
     }
   });
 }
@@ -80,95 +95,69 @@ function getWPM() {
   const time = (Date.now() - startTime) / 1000;
   const raw = (typedText.length / 5) / (time / 60);
 
-  smoothWPM += (raw - smoothWPM) * 0.08;
-  return Math.round(smoothWPM);
+  smoothWPM += (raw - smoothWPM) * 0.1;
+
+  return Math.round(smoothWPM || 0);
 }
 
 /* ACCURACY */
-function getAccuracy() {
+function getAcc() {
   let correct = 0;
 
   for (let i = 0; i < typedText.length; i++) {
     if (typedText[i] === currentSentence[i]) correct++;
   }
 
-  let raw = typedText.length
+  let acc = typedText.length
     ? (correct / typedText.length) * 100
     : 100;
 
-  smoothAcc += (raw - smoothAcc) * 0.1;
+  smoothAcc += (acc - smoothAcc) * 0.1;
+
   return Math.round(smoothAcc);
 }
 
-/* INPUT */
-function pressKey(k) {
-  if (finished) return;
-
-  if (!startTime) startGame();
-
-  if (k === "⌫") typedText = typedText.slice(0, -1);
-  else if (k === "SPACE") typedText += " ";
-  else typedText += k;
-
-  updateTyped();
-}
-
-/* UPDATE */
-function updateTyped() {
-  document.getElementById("wpm").innerText = getWPM();
-  document.getElementById("accuracy").innerText = getAccuracy();
-  document.getElementById("highScore").innerText = highScore;
-
-  highlight();
-}
-
-/* GRAPH FIXED */
+/* GRAPH (FIXED) */
 function drawGraph() {
-  const canvas = document.getElementById("wpmChart");
-  const ctx = canvas.getContext("2d");
+  const c = document.getElementById("wpmChart");
+  const ctx = c.getContext("2d");
 
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 170;
+  c.width = c.offsetWidth;
+  c.height = 150;
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,c.width,c.height);
 
   const wpm = getWPM();
-  const acc = getAccuracy();
+  const acc = getAcc();
 
   wpmHistory.push(wpm);
   accuracyHistory.push(acc);
 
-  if (wpmHistory.length > 120) {
+  if (wpmHistory.length > 100) {
     wpmHistory.shift();
     accuracyHistory.shift();
   }
 
-  drawArea(wpmHistory, 100, "#4caf50", "rgba(76,175,80,0.3)");
-  drawArea(accuracyHistory, 100, "#2196f3", "rgba(33,150,243,0.3)");
+  drawLine(wpmHistory, "#4caf50");
+  drawLine(accuracyHistory, "#2196f3");
 
-  animationFrame = requestAnimationFrame(drawGraph);
+  requestAnimationFrame(drawGraph);
 }
 
 /* GRAPH DRAW */
-function drawArea(data, max, stroke, fill) {
-  const canvas = document.getElementById("wpmChart");
-  const ctx = canvas.getContext("2d");
+function drawLine(data, color) {
+  const c = document.getElementById("wpmChart");
+  const ctx = c.getContext("2d");
 
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height);
+  ctx.strokeStyle = color;
 
   data.forEach((v,i)=>{
-    const x = (i/(data.length-1))*canvas.width;
-    const y = canvas.height - (v/max)*canvas.height;
+    const x = (i/(data.length-1))*c.width;
+    const y = c.height - (v/100)*c.height;
     ctx.lineTo(x,y);
   });
 
-  ctx.lineTo(canvas.width, canvas.height);
-  ctx.closePath();
-
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.strokeStyle = stroke;
   ctx.stroke();
 }
 
@@ -186,9 +175,9 @@ function showPage(p) {
 /* MODE */
 function toggleMode() {
   mode = mode === "words" ? "sentences" : "words";
-  document.getElementById("modeLabel").innerText = mode;
   startGame();
 }
 
 /* INIT */
 window.onload = startGame;
+setInterval(drawGraph, 500);
