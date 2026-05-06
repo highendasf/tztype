@@ -4,8 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TZType</title>
 
-  <!-- CACHE FIX -->
-  <link rel="stylesheet" href="style.css?v=1.1.0">
+  <link rel="stylesheet" href="style.css?v=1.2.0">
 </head>
 
 <body>
@@ -20,11 +19,21 @@
   </div>
 
   <div id="sentence" class="sentence"></div>
-  <div id="typed" class="typed"></div>
+  <div id="typed" class="typed" tabindex="0"></div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="wpm-dot">● WPM</span>
+    <span class="acc-dot">● Accuracy</span>
+  </div>
 
   <canvas id="wpmChart"></canvas>
 
-  <button onclick="toggleKeyboard()">Show / Hide Keyboard</button>
+  <!-- BUTTON + TAB HINT -->
+  <div class="controls">
+    <button onclick="toggleKeyboard()">Show / Hide Keyboard</button>
+    <span class="shortcut">TAB</span>
+  </div>
 
   <div id="keyboard"></div>
 
@@ -32,7 +41,7 @@
 
 </div>
 
-<script src="script.js?v=1.1.0"></script>
+<script src="script.js?v=1.2.0"></script>
 
 </body>
 </html>
