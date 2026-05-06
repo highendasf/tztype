@@ -1,4 +1,4 @@
-console.log("Typing App FULL CONNECTED ✔");
+console.log("TZType FULL FIX v1.1 ✔");
 
 let typedText = "";
 let currentSentence = "";
@@ -10,8 +10,11 @@ let highScore = localStorage.getItem("highScore") || 0;
 
 let wpmHistory = [];
 let animationFrame;
+let smoothWPM = 0;
 
-/* ================= DATA ================= */
+let keyboardVisible = true;
+
+/* DATA */
 const sentences = [
   "the quick brown fox jumps over the lazy dog",
   "practice typing every day",
@@ -20,13 +23,7 @@ const sentences = [
   "clean code is better than clever code"
 ];
 
-/* ================= INIT ================= */
-window.onload = () => {
-  document.getElementById("highScore").innerText = highScore;
-  buildKeyboard();
-};
-
-/* ================= START ================= */
+/* START */
 function startGame() {
   finished = false;
 
@@ -37,15 +34,19 @@ function startGame() {
   cursorIndex = 0;
   startTime = Date.now();
 
+  document.getElementById("highScore").innerText = highScore;
+
   renderSentence();
   updateTyped();
 
   wpmHistory = [];
+  smoothWPM = 0;
+
   cancelAnimationFrame(animationFrame);
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= RENDER ================= */
+/* RENDER */
 function renderSentence() {
   document.getElementById("sentence").innerHTML =
     currentSentence.split(" ").map(word =>
@@ -55,16 +56,22 @@ function renderSentence() {
     ).join(" ");
 }
 
-/* ================= WPM ================= */
+/* SMOOTH WPM */
 function getWPM() {
+  if (!startTime) return 0;
+
   const time = (Date.now() - startTime) / 1000;
   if (time < 1) return 0;
 
-  const words = typedText.trim().split(/\s+/).length;
-  return Math.round((words / time) * 60);
+  const chars = typedText.length;
+  const raw = (chars / 5) / (time / 60);
+
+  smoothWPM += (raw - smoothWPM) * 0.2;
+
+  return Math.round(smoothWPM);
 }
 
-/* ================= INPUT ================= */
+/* INPUT */
 function pressKey(key) {
   if (finished) return;
 
@@ -73,12 +80,10 @@ function pressKey(key) {
   if (key === "⌫") {
     typedText = typedText.slice(0, -1);
     cursorIndex = Math.max(0, cursorIndex - 1);
-  }
-  else if (key === "SPACE") {
+  } else if (key === "SPACE") {
     typedText += " ";
     cursorIndex++;
-  }
-  else {
+  } else {
     typedText += key;
     cursorIndex++;
   }
@@ -88,62 +93,61 @@ function pressKey(key) {
   if (typedText === currentSentence) finishGame();
 }
 
-/* ================= UPDATE + CURSOR ================= */
+/* UPDATE */
 function updateTyped() {
   document.getElementById("typed").innerHTML =
     typedText.split("").map((c, i) => {
-      const display = c === " " ? "·" : c;
+      const show = c === " " ? "·" : c;
 
       if (i === cursorIndex && !finished) {
-        return `<span class="cursor">${display}</span>`;
+        return `<span class="cursor">${show}</span>`;
       }
-      return display;
+      return show;
     }).join("");
 
   highlight();
+
+  document.getElementById("wpm").innerText = getWPM();
 }
 
-/* ================= HIGHLIGHT ================= */
+/* HIGHLIGHT */
 function highlight() {
-  const wordsEl = document.querySelectorAll(".word");
+  const words = document.querySelectorAll(".word");
   const typedWords = typedText.split(" ");
 
-  wordsEl.forEach((wordEl, i) => {
-    const letters = wordEl.querySelectorAll(".letter");
-    const typedWord = typedWords[i] || "";
+  words.forEach((w, i) => {
+    const letters = w.querySelectorAll(".letter");
+    const typed = typedWords[i] || "";
 
-    letters.forEach((letter, j) => {
-      const char = typedWord[j];
+    letters.forEach((l, j) => {
+      l.classList.remove("correct", "wrong");
 
-      letter.classList.remove("correct", "wrong");
+      if (!typed[j]) return;
 
-      if (!char) return;
-
-      if (char === letter.innerText) {
-        letter.classList.add("correct");
+      if (typed[j] === l.innerText) {
+        l.classList.add("correct");
       } else {
-        letter.classList.add("wrong");
+        l.classList.add("wrong");
       }
     });
   });
 }
 
-/* ================= FINISH ================= */
+/* FINISH */
 function finishGame() {
   finished = true;
 
   const wpm = getWPM();
 
-  document.getElementById("wpm").innerText = wpm;
-
   if (wpm > highScore) {
     highScore = wpm;
     localStorage.setItem("highScore", wpm);
-    document.getElementById("highScore").innerText = wpm;
   }
+
+  document.getElementById("highScore").innerText = highScore;
 }
 
-/* ================= GRAPH ================= */
+/* GRAPH */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
@@ -163,11 +167,20 @@ function drawGraph() {
   wpmHistory.push(wpm);
   if (wpmHistory.length > 120) wpmHistory.shift();
 
+  // stabilize drops
+  if (wpmHistory.length > 2) {
+    const last = wpmHistory[wpmHistory.length - 1];
+    const prev = wpmHistory[wpmHistory.length - 2];
+
+    if (last < prev * 0.5) {
+      wpmHistory[wpmHistory.length - 1] = prev * 0.7;
+    }
+  }
+
   const max = Math.max(...wpmHistory, 20);
 
   ctx.beginPath();
   ctx.strokeStyle = "#4caf50";
-  ctx.lineWidth = 2;
 
   wpmHistory.forEach((v, i) => {
     const x = (i / wpmHistory.length) * canvas.width;
@@ -181,7 +194,7 @@ function drawGraph() {
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* ================= KEYBOARD ================= */
+/* KEYBOARD */
 function buildKeyboard() {
   const layout = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -190,6 +203,7 @@ function buildKeyboard() {
   ];
 
   const kb = document.getElementById("keyboard");
+  kb.innerHTML = "";
 
   layout.forEach(row => {
     const div = document.createElement("div");
@@ -220,7 +234,17 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* ================= KEY INPUT ================= */
+/* TOGGLE KEYBOARD */
+function toggleKeyboard() {
+  const kb = document.getElementById("keyboard");
+
+  keyboardVisible = !keyboardVisible;
+
+  kb.style.opacity = keyboardVisible ? "1" : "0";
+  kb.style.pointerEvents = keyboardVisible ? "auto" : "none";
+}
+
+/* KEY INPUT */
 document.addEventListener("keydown", (e) => {
   if (finished) return;
 
@@ -233,3 +257,6 @@ document.addEventListener("keydown", (e) => {
 
   if (e.key.length === 1) pressKey(e.key.toLowerCase());
 });
+
+/* INIT */
+window.onload = buildKeyboard;
