@@ -1,4 +1,4 @@
-console.log("TZType FULL SYSTEM ✔");
+console.log("TZType ULTRA ✔");
 
 let typedText = "";
 let currentSentence = "";
@@ -16,7 +16,6 @@ let accuracyHistory = [];
 let smoothWPM = 0;
 let smoothAcc = 100;
 
-let animationFrame;
 let keyboardVisible = true;
 
 /* DATA */
@@ -33,7 +32,7 @@ const sentences = [
   "clean code is better than clever code"
 ];
 
-/* START */
+/* START GAME */
 function startGame() {
   finished = false;
 
@@ -80,8 +79,7 @@ function getWPM() {
   const time = (Date.now() - startTime) / 1000;
   if (time < 1) return 0;
 
-  const chars = typedText.length;
-  const raw = (chars / 5) / (time / 60);
+  const raw = (typedText.length / 5) / (time / 60);
 
   smoothWPM += (raw - smoothWPM) * 0.08;
 
@@ -112,7 +110,7 @@ function pressKey(key) {
 
   if (key === "⌫") {
     typedText = typedText.slice(0, -1);
-    cursorIndex = Math.max(0, cursorIndex - 1);
+    cursorIndex--;
   } else if (key === "SPACE") {
     typedText += " ";
     cursorIndex++;
@@ -131,41 +129,14 @@ function updateTyped() {
   document.getElementById("typed").innerHTML =
     typedText.split("").map((c, i) => {
       const show = c === " " ? "·" : c;
-
-      if (i === cursorIndex && !finished) {
-        return `<span class="cursor">${show}</span>`;
-      }
-      return show;
+      return i === cursorIndex
+        ? `<span class="cursor">${show}</span>`
+        : show;
     }).join("");
-
-  highlight();
 
   document.getElementById("wpm").innerText = getWPM();
   document.getElementById("accuracy").innerText = getAccuracy();
   document.getElementById("highScore").innerText = highScore;
-}
-
-/* HIGHLIGHT */
-function highlight() {
-  const words = document.querySelectorAll(".word");
-  const typedWords = typedText.split(" ");
-
-  words.forEach((w, i) => {
-    const letters = w.querySelectorAll(".letter");
-    const typed = typedWords[i] || "";
-
-    letters.forEach((l, j) => {
-      l.classList.remove("correct", "wrong");
-
-      if (!typed[j]) return;
-
-      if (typed[j] === l.innerText) {
-        l.classList.add("correct");
-      } else {
-        l.classList.add("wrong");
-      }
-    });
-  });
 }
 
 /* FINISH */
@@ -178,15 +149,65 @@ function finishGame() {
     highScore = wpm;
     localStorage.setItem("highScore", wpm);
   }
+
+  saveHistory(wpm, getAccuracy());
 }
 
-/* GRAPH */
+/* HISTORY */
+function saveHistory(wpm, acc) {
+  let history = JSON.parse(localStorage.getItem("history") || "[]");
+
+  history.push({
+    wpm,
+    acc,
+    time: Date.now()
+  });
+
+  localStorage.setItem("history", JSON.stringify(history));
+}
+
+function loadHistory() {
+  let history = JSON.parse(localStorage.getItem("history") || "[]");
+
+  const box = document.getElementById("historyBox");
+
+  if (!history.length) {
+    box.innerHTML = "<p>No history yet</p>";
+    return;
+  }
+
+  box.innerHTML = history.slice(-10).reverse().map(h =>
+    `<div>WPM: ${h.wpm} | Acc: ${h.acc}%</div>`
+  ).join("");
+}
+
+/* MODE */
+function toggleMode() {
+  mode = mode === "words" ? "sentences" : "words";
+  document.getElementById("modeLabel").innerText =
+    mode === "words" ? "Words" : "Sentences";
+
+  startGame();
+}
+
+/* PAGE SWITCH */
+function showPage(page) {
+  document.getElementById("gamePage").style.display =
+    page === "game" ? "block" : "none";
+
+  document.getElementById("historyPage").style.display =
+    page === "history" ? "block" : "none";
+
+  if (page === "history") loadHistory();
+}
+
+/* GRAPH (ULTRA SMOOTH + GRADIENT) */
 function drawGraph() {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
 
   canvas.width = canvas.offsetWidth;
-  canvas.height = 150;
+  canvas.height = 170;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -195,26 +216,21 @@ function drawGraph() {
     return;
   }
 
-  const wpm = getWPM();
-  const acc = getAccuracy();
-
-  wpmHistory.push(wpm);
-  accuracyHistory.push(acc);
+  wpmHistory.push(getWPM());
+  accuracyHistory.push(getAccuracy());
 
   if (wpmHistory.length > 120) {
     wpmHistory.shift();
     accuracyHistory.shift();
   }
 
-  const maxWPM = Math.max(...wpmHistory, 20);
-
-  drawArea(wpmHistory, maxWPM, "#4caf50", "rgba(76,175,80,0.3)");
+  drawArea(wpmHistory, 100, "#4caf50", "rgba(76,175,80,0.3)");
   drawArea(accuracyHistory, 100, "#2196f3", "rgba(33,150,243,0.3)");
 
   animationFrame = requestAnimationFrame(drawGraph);
 }
 
-/* SMOOTH AREA GRAPH */
+/* GRAPH DRAW */
 function drawArea(data, max, stroke, fill) {
   const canvas = document.getElementById("wpmChart");
   const ctx = canvas.getContext("2d");
@@ -222,16 +238,12 @@ function drawArea(data, max, stroke, fill) {
   if (data.length < 2) return;
 
   ctx.beginPath();
-
   ctx.moveTo(0, canvas.height);
 
   data.forEach((v, i) => {
     const x = (i / (data.length - 1)) * canvas.width;
     const y = canvas.height - (v / max) * canvas.height;
-
-    const cx = (x + (i > 0 ? (i-1)/(data.length-1)*canvas.width : x)) / 2;
-
-    ctx.quadraticCurveTo(x, y, cx, y);
+    ctx.lineTo(x, y);
   });
 
   ctx.lineTo(canvas.width, canvas.height);
@@ -242,15 +254,6 @@ function drawArea(data, max, stroke, fill) {
 
   ctx.strokeStyle = stroke;
   ctx.stroke();
-}
-
-/* MODE */
-function toggleMode() {
-  mode = mode === "words" ? "sentences" : "words";
-  document.getElementById("modeLabel").innerText =
-    mode === "words" ? "Words" : "Sentences";
-
-  startGame();
 }
 
 /* KEYBOARD */
@@ -293,7 +296,7 @@ function buildKeyboard() {
   kb.appendChild(bottom);
 }
 
-/* TOGGLE */
+/* TOGGLE KEYBOARD */
 function toggleKeyboard() {
   const kb = document.getElementById("keyboard");
 
