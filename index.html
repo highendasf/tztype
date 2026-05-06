@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Typing App</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TZType</title>
+
+  <!-- CACHE FIX -->
+  <link rel="stylesheet" href="style.css?v=1.1.0">
 </head>
 
 <body>
@@ -12,29 +13,26 @@
 <div class="app">
 
   <div class="top">
-    <span><b id="wpm">0</b> WPM</span>
-    <span><b id="time">0</b>s</span>
-    <span>best: <b id="highScore">0</b></span>
-  </div>
-
-  <div class="mode">
-    <button id="sentenceModeBtn">Sentence</button>
-    <button id="wordModeBtn">Words</button>
+    <span>WPM: <b id="wpm">0</b></span>
+    <span>Time: <b id="time">0</b></span>
+    <span>Acc: <b id="accuracy">100</b>%</span>
+    <span>Best: <b id="highScore">0</b></span>
   </div>
 
   <div id="sentence" class="sentence"></div>
   <div id="typed" class="typed"></div>
 
-  <button onclick="startGame()">Start</button>
-  <button id="toggleKeyboardBtn">Hide Keyboard</button>
-
   <canvas id="wpmChart"></canvas>
+
+  <button onclick="toggleKeyboard()">Show / Hide Keyboard</button>
 
   <div id="keyboard"></div>
 
+  <button onclick="startGame()">Start</button>
+
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=1.1.0"></script>
 
 </body>
 </html>
