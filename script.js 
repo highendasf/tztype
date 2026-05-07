@@ -1,0 +1,12 @@
+window.onload = () => {
+  buildKeyboard();
+  startGame();
+  setInterval(drawGraph, 200);
+};
+
+document.addEventListener("keydown", e => {
+
+  if (e.key === "Backspace") inputKey("BACK");
+  else if (e.key === " ") inputKey(" ");
+  else if (e.key.length === 1) inputKey(e.key.toLowerCase());
+});
