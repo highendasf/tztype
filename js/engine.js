@@ -65,4 +65,4 @@ function getACC() {
 
   smoothACC += (raw-smoothACC)*0.1;
   return Math.round(smoothACC);
-}
+} 
