@@ -11,9 +11,6 @@ let accHistory = [];
 let smoothWPM = 0;
 let smoothACC = 100;
 
-let lastWPM = 0;
-let lastACC = 100;
-
 let graphLoop = null;
 
 /* =========================
@@ -33,7 +30,7 @@ const sentences = [
 ];
 
 /* =========================
-   GAME START
+   START GAME
 ========================= */
 
 function startGame() {
@@ -52,11 +49,6 @@ function startGame() {
 
   } else if (mode === "oneword") {
     sentence = words[Math.floor(Math.random() * words.length)];
-
-  } else {
-    sentence = Array.from({ length: 20 }, () =>
-      words[Math.floor(Math.random() * words.length)]
-    ).join(" ");
   }
 
   wpmHistory = [];
@@ -73,11 +65,10 @@ function startGame() {
 }
 
 /* =========================
-   RENDER TEXT
+   RENDER
 ========================= */
 
 function render() {
-
   const el = document.getElementById("sentence");
   if (!el) return;
 
@@ -91,11 +82,10 @@ function render() {
 }
 
 /* =========================
-   INPUT SYSTEM (UNIFIED)
+   INPUT
 ========================= */
 
 function inputKey(key) {
-
   if (finished) return;
   if (!startTime) startGame();
 
@@ -108,9 +98,7 @@ function inputKey(key) {
   update();
 }
 
-/* physical keyboard */
 document.addEventListener("keydown", (e) => {
-
   if (e.key === "Backspace") inputKey("BACK");
   else if (e.key === " ") {
     e.preventDefault();
@@ -127,17 +115,10 @@ document.addEventListener("keydown", (e) => {
 
 function update() {
 
-  lastWPM = getWPM();
-  lastACC = getACC();
+  document.getElementById("typed").innerText = typedText;
 
-  const typedEl = document.getElementById("typed");
-  if (typedEl) typedEl.innerText = typedText;
-
-  const wpmEl = document.getElementById("wpm");
-  if (wpmEl) wpmEl.innerText = lastWPM;
-
-  const accEl = document.getElementById("accuracy");
-  if (accEl) accEl.innerText = lastACC;
+  document.getElementById("wpm").innerText = getWPM();
+  document.getElementById("accuracy").innerText = getACC();
 
   highlight();
 
@@ -174,7 +155,7 @@ function highlight() {
 }
 
 /* =========================
-   WPM (SMOOTH)
+   WPM
 ========================= */
 
 function getWPM() {
@@ -182,13 +163,13 @@ function getWPM() {
   const time = Math.max((Date.now() - startTime) / 1000, 0.5);
   const raw = (typedText.length / 5) / (time / 60);
 
-  smoothWPM += (raw - smoothWPM) * 0.12;
+  smoothWPM += (raw - smoothWPM) * 0.1;
 
-  return Math.max(0, Math.round(smoothWPM));
+  return Math.round(smoothWPM);
 }
 
 /* =========================
-   ACCURACY (SMOOTH)
+   ACC
 ========================= */
 
 function getACC() {
@@ -203,13 +184,13 @@ function getACC() {
     ? (correct / typedText.length) * 100
     : 100;
 
-  smoothACC += (raw - smoothACC) * 0.12;
+  smoothACC += (raw - smoothACC) * 0.1;
 
-  return Math.max(0, Math.round(smoothACC));
+  return Math.round(smoothACC);
 }
 
 /* =========================
-   GRAPH (FIXED + SMOOTH)
+   GRAPH
 ========================= */
 
 function drawGraph() {
@@ -224,10 +205,10 @@ function drawGraph() {
 
   ctx.clearRect(0,0,c.width,c.height);
 
-  wpmHistory.push(lastWPM);
-  accHistory.push(lastACC);
+  wpmHistory.push(getWPM());
+  accHistory.push(getACC());
 
-  if (wpmHistory.length > 70) {
+  if (wpmHistory.length > 60) {
     wpmHistory.shift();
     accHistory.shift();
   }
@@ -237,7 +218,7 @@ function drawGraph() {
 }
 
 /* =========================
-   GRAPH LINE (CLEAN)
+   LINE
 ========================= */
 
 function drawLine(data, color) {
@@ -247,39 +228,61 @@ function drawLine(data, color) {
 
   if (data.length < 2) return;
 
-  const step = c.width / (data.length - 1);
-
   ctx.beginPath();
 
   for (let i = 0; i < data.length; i++) {
 
-    const x = i * step;
-    const y = c.height - (data[i] / 120) * c.height;
+    const x = (i/(data.length-1)) * c.width;
+    const y = c.height - (data[i]/120) * c.height;
 
-    if (i === 0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   }
 
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
-  ctx.lineJoin = "round";
-
   ctx.stroke();
 }
 
 /* =========================
-   MODE SWITCH
+   MENU (FIXED ERROR)
+========================= */
+
+function toggleMenu(btn) {
+  const sidebar = document.querySelector(".sidebar");
+
+  if (!sidebar) return;
+
+  sidebar.classList.toggle("show");
+  btn.classList.toggle("active");
+}
+
+/* =========================
+   MODE FIX
 ========================= */
 
 function setMode(m) {
-  mode = m;
+
+  if (m === "one") mode = "oneword";
+  else mode = m;
+
   startGame();
+}
+
+/* =========================
+   KEYBOARD TOGGLE
+========================= */
+
+function toggleKeyboard() {
+
+  const kb = document.getElementById("keyboard");
+  if (!kb) return;
+
+  kb.style.display =
+    kb.style.display === "none" ? "block" : "none";
 }
 
 /* =========================
    INIT
 ========================= */
 
-window.onload = () => {
-  startGame();
-};
+window.onload = startGame;
