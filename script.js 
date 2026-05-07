@@ -30,7 +30,7 @@ const sentences = [
 ];
 
 /* =========================
-   START GAME
+   GAME START
 ========================= */
 
 function startGame() {
@@ -65,7 +65,7 @@ function startGame() {
 }
 
 /* =========================
-   RENDER
+   RENDER TEXT
 ========================= */
 
 function render() {
@@ -82,31 +82,25 @@ function render() {
 }
 
 /* =========================
-   INPUT
+   INPUT SYSTEM
 ========================= */
 
-function inputKey(key) {
+document.addEventListener("keydown", (e) => {
+
   if (finished) return;
+
   if (!startTime) startGame();
 
-  if (key === "BACK") {
+  if (e.key === "Backspace") {
     typedText = typedText.slice(0, -1);
-  } else {
-    typedText += key;
+  } else if (e.key === " ") {
+    e.preventDefault();
+    typedText += " ";
+  } else if (e.key.length === 1) {
+    typedText += e.key.toLowerCase();
   }
 
   update();
-}
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Backspace") inputKey("BACK");
-  else if (e.key === " ") {
-    e.preventDefault();
-    inputKey(" ");
-  }
-  else if (e.key.length === 1) {
-    inputKey(e.key.toLowerCase());
-  }
 });
 
 /* =========================
@@ -115,7 +109,8 @@ document.addEventListener("keydown", (e) => {
 
 function update() {
 
-  document.getElementById("typed").innerText = typedText;
+  const typedEl = document.getElementById("typed");
+  if (typedEl) typedEl.innerText = typedText;
 
   document.getElementById("wpm").innerText = getWPM();
   document.getElementById("accuracy").innerText = getACC();
@@ -169,7 +164,7 @@ function getWPM() {
 }
 
 /* =========================
-   ACC
+   ACCURACY
 ========================= */
 
 function getACC() {
@@ -218,7 +213,7 @@ function drawGraph() {
 }
 
 /* =========================
-   LINE
+   GRAPH LINE
 ========================= */
 
 function drawLine(data, color) {
@@ -244,20 +239,19 @@ function drawLine(data, color) {
 }
 
 /* =========================
-   MENU (FIXED ERROR)
+   MENU FIX (GLOBAL)
 ========================= */
 
 function toggleMenu(btn) {
   const sidebar = document.querySelector(".sidebar");
-
   if (!sidebar) return;
 
   sidebar.classList.toggle("show");
-  btn.classList.toggle("active");
+  if (btn) btn.classList.toggle("active");
 }
 
 /* =========================
-   MODE FIX
+   MODE FIX (MATCH HTML)
 ========================= */
 
 function setMode(m) {
@@ -269,7 +263,7 @@ function setMode(m) {
 }
 
 /* =========================
-   KEYBOARD TOGGLE
+   KEYBOARD FIX
 ========================= */
 
 function toggleKeyboard() {
