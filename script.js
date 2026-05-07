@@ -155,7 +155,7 @@ function highlight() {
 
     el.classList.remove("correct","wrong","current");
 
-    if (typed == null) {
+    if (typed === null) {
       if (i === typedText.length) el.classList.add("current");
       return;
     }
@@ -256,7 +256,7 @@ function drawLine(data, color) {
 }
 
 /* =========================
-   MENU (FIX)
+   MENU
 ========================= */
 
 function toggleMenu(btn) {
@@ -269,8 +269,10 @@ function toggleMenu(btn) {
 ========================= */
 
 function setMode(m) {
-  mode = (m === "one") ? "one" : m;
-  startGame();
+  if (["words", "sentences", "one"].includes(m)) {
+    mode = m;
+    startGame();
+  }
 }
 
 /* =========================
