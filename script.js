@@ -30,7 +30,7 @@ const sentences = [
 ];
 
 /* =========================
-   GAME START
+   START GAME
 ========================= */
 
 function startGame() {
@@ -65,7 +65,7 @@ function startGame() {
 }
 
 /* =========================
-   RENDER TEXT
+   RENDER
 ========================= */
 
 function render() {
@@ -82,7 +82,7 @@ function render() {
 }
 
 /* =========================
-   INPUT SYSTEM
+   INPUT
 ========================= */
 
 document.addEventListener("keydown", (e) => {
@@ -213,7 +213,7 @@ function drawGraph() {
 }
 
 /* =========================
-   GRAPH LINE
+   LINE
 ========================= */
 
 function drawLine(data, color) {
@@ -239,7 +239,7 @@ function drawLine(data, color) {
 }
 
 /* =========================
-   MENU FIX (GLOBAL)
+   MENU (FIXED GLOBAL ACCESS)
 ========================= */
 
 function toggleMenu(btn) {
@@ -251,7 +251,7 @@ function toggleMenu(btn) {
 }
 
 /* =========================
-   MODE FIX (MATCH HTML)
+   MODE SWITCH
 ========================= */
 
 function setMode(m) {
@@ -263,7 +263,7 @@ function setMode(m) {
 }
 
 /* =========================
-   KEYBOARD FIX
+   KEYBOARD TOGGLE
 ========================= */
 
 function toggleKeyboard() {
@@ -274,6 +274,15 @@ function toggleKeyboard() {
   kb.style.display =
     kb.style.display === "none" ? "block" : "none";
 }
+
+/* =========================
+   CRITICAL FIX: GLOBAL EXPORT
+   (THIS FIXES YOUR ERROR)
+========================= */
+
+window.toggleMenu = toggleMenu;
+window.setMode = setMode;
+window.toggleKeyboard = toggleKeyboard;
 
 /* =========================
    INIT
