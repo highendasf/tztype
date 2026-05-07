@@ -11,16 +11,25 @@ let accuracyHistory = [];
 let smoothWPM = 0;
 let smoothAcc = 100;
 
+let graphLoop = null;
+let keyboardVisible = true;
+
 /* DATA */
-const words = ["apple","banana","code","speed","typing","focus","keyboard"];
+const words = [
+  "apple","banana","code","speed","typing",
+  "focus","keyboard","practice","accuracy",
+  "javascript","gaming","monitor"
+];
 
 const sentences = [
   "practice typing every day",
   "javascript makes websites interactive",
-  "focus on accuracy first"
+  "focus on accuracy first",
+  "speed comes naturally with practice",
+  "typing games improve keyboard memory"
 ];
 
-/* START */
+/* START GAME */
 function startGame() {
   finished = false;
 
@@ -32,18 +41,37 @@ function startGame() {
       : sentences[Math.floor(Math.random() * sentences.length)];
 
   typedText = "";
+
   startTime = Date.now();
+
+  wpmHistory = [];
+  accuracyHistory = [];
+
+  smoothWPM = 0;
+  smoothAcc = 100;
 
   render();
   update();
+
+  if (graphLoop) clearInterval(graphLoop);
+
+  graphLoop = setInterval(drawGraph, 200);
 }
 
 /* RENDER */
 function render() {
-  document.getElementById("sentence").innerHTML =
-    currentSentence.split(" ").map(w =>
-      `<span class="word">${w}</span>`
-    ).join(" ");
+  const sentenceEl = document.getElementById("sentence");
+
+  sentenceEl.innerHTML = currentSentence
+    .split("")
+    .map(letter => {
+      if (letter === " ") {
+        return `<span class="letter space">·</span>`;
+      }
+
+      return `<span class="letter">${letter}</span>`;
+    })
+    .join("");
 }
 
 /* INPUT */
@@ -54,11 +82,13 @@ document.addEventListener("keydown", (e) => {
 
   if (e.key === "Backspace") {
     typedText = typedText.slice(0, -1);
-  } else if (e.key === " ") {
+  }
+  else if (e.key === " ") {
     e.preventDefault();
     typedText += " ";
-  } else if (e.key.length === 1) {
-    typedText += e.key;
+  }
+  else if (e.key.length === 1) {
+    typedText += e.key.toLowerCase();
   }
 
   update();
@@ -66,38 +96,77 @@ document.addEventListener("keydown", (e) => {
 
 /* UPDATE */
 function update() {
-  document.getElementById("typed").innerText = typedText;
+  const typedEl = document.getElementById("typed");
+
+  typedEl.innerHTML = typedText
+    .split("")
+    .map((char, i) => {
+      const display = char === " " ? "·" : char;
+
+      if (i === typedText.length - 1) {
+        return `<span class="cursor">${display}</span>`;
+      }
+
+      return display;
+    })
+    .join("");
 
   document.getElementById("wpm").innerText = getWPM();
   document.getElementById("accuracy").innerText = getAcc();
 
   highlight();
+
+  if (typedText === currentSentence) {
+    finishGame();
+  }
 }
 
-/* FIXED HIGHLIGHT */
+/* HIGHLIGHT */
 function highlight() {
-  const wordsEl = document.querySelectorAll(".word");
-  const typedWords = typedText.split(" ");
+  const letters = document.querySelectorAll(".letter");
 
-  wordsEl.forEach((el, i) => {
-    if (typedWords[i] === undefined) return;
+  letters.forEach((el, i) => {
+    el.classList.remove("correct", "wrong", "current");
 
-    if (typedWords[i] === el.innerText) {
-      el.style.color = "#4caf50";
+    const expected = currentSentence[i];
+    const typed = typedText[i];
+
+    if (typed == null) {
+      if (i === typedText.length) {
+        el.classList.add("current");
+      }
+
+      return;
+    }
+
+    if (typed === expected) {
+      el.classList.add("correct");
     } else {
-      el.style.color = "#ff4d4d";
+      el.classList.add("wrong");
     }
   });
 }
 
+/* FINISH */
+function finishGame() {
+  finished = true;
+
+  clearInterval(graphLoop);
+}
+
 /* WPM */
 function getWPM() {
+  if (!startTime) return 0;
+
   const time = (Date.now() - startTime) / 1000;
+
+  if (time <= 0) return 0;
+
   const raw = (typedText.length / 5) / (time / 60);
 
-  smoothWPM += (raw - smoothWPM) * 0.1;
+  smoothWPM += (raw - smoothWPM) * 0.08;
 
-  return Math.round(smoothWPM || 0);
+  return Math.max(0, Math.round(smoothWPM));
 }
 
 /* ACCURACY */
@@ -105,27 +174,33 @@ function getAcc() {
   let correct = 0;
 
   for (let i = 0; i < typedText.length; i++) {
-    if (typedText[i] === currentSentence[i]) correct++;
+    if (typedText[i] === currentSentence[i]) {
+      correct++;
+    }
   }
 
-  let acc = typedText.length
-    ? (correct / typedText.length) * 100
-    : 100;
+  const raw =
+    typedText.length > 0
+      ? (correct / typedText.length) * 100
+      : 100;
 
-  smoothAcc += (acc - smoothAcc) * 0.1;
+  smoothAcc += (raw - smoothAcc) * 0.08;
 
-  return Math.round(smoothAcc);
+  return Math.max(0, Math.round(smoothAcc));
 }
 
-/* GRAPH (FIXED) */
+/* GRAPH */
 function drawGraph() {
   const c = document.getElementById("wpmChart");
+
+  if (!c) return;
+
   const ctx = c.getContext("2d");
 
   c.width = c.offsetWidth;
   c.height = 150;
 
-  ctx.clearRect(0,0,c.width,c.height);
+  ctx.clearRect(0, 0, c.width, c.height);
 
   const wpm = getWPM();
   const acc = getAcc();
@@ -133,29 +208,35 @@ function drawGraph() {
   wpmHistory.push(wpm);
   accuracyHistory.push(acc);
 
-  if (wpmHistory.length > 100) {
+  if (wpmHistory.length > 60) {
     wpmHistory.shift();
     accuracyHistory.shift();
   }
 
   drawLine(wpmHistory, "#4caf50");
   drawLine(accuracyHistory, "#2196f3");
-
-  requestAnimationFrame(drawGraph);
 }
 
-/* GRAPH DRAW */
+/* DRAW GRAPH LINE */
 function drawLine(data, color) {
   const c = document.getElementById("wpmChart");
   const ctx = c.getContext("2d");
 
+  if (data.length < 2) return;
+
   ctx.beginPath();
   ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
 
-  data.forEach((v,i)=>{
-    const x = (i/(data.length-1))*c.width;
-    const y = c.height - (v/100)*c.height;
-    ctx.lineTo(x,y);
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * c.width;
+    const y = c.height - (v / 100) * c.height;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   });
 
   ctx.stroke();
@@ -167,17 +248,91 @@ function toggleMenu() {
 }
 
 /* PAGE */
-function showPage(p) {
-  document.getElementById("gamePage").style.display = p==="game"?"block":"none";
-  document.getElementById("historyPage").style.display = p==="history"?"block":"none";
+function showPage(page) {
+  document.getElementById("gamePage").style.display =
+    page === "game" ? "block" : "none";
+
+  document.getElementById("historyPage").style.display =
+    page === "history" ? "block" : "none";
 }
 
 /* MODE */
 function toggleMode() {
   mode = mode === "words" ? "sentences" : "words";
+
   startGame();
 }
 
+/* KEYBOARD TOGGLE */
+function toggleKeyboard() {
+  const kb = document.getElementById("keyboard");
+
+  keyboardVisible = !keyboardVisible;
+
+  kb.style.display = keyboardVisible ? "block" : "none";
+}
+
+/* BUILD KEYBOARD */
+function buildKeyboard() {
+  const layout = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["Z","X","C","V","B","N","M"]
+  ];
+
+  const kb = document.getElementById("keyboard");
+
+  kb.innerHTML = "";
+
+  layout.forEach(row => {
+    const rowEl = document.createElement("div");
+    rowEl.className = "row";
+
+    row.forEach(key => {
+      const keyEl = document.createElement("div");
+
+      keyEl.className = "key";
+      keyEl.innerText = key;
+
+      keyEl.onclick = () => {
+        typedText += key.toLowerCase();
+        update();
+      };
+
+      rowEl.appendChild(keyEl);
+    });
+
+    kb.appendChild(rowEl);
+  });
+
+  /* SPACE + BACKSPACE */
+  const specialRow = document.createElement("div");
+  specialRow.className = "row";
+
+  ["SPACE", "⌫"].forEach(key => {
+    const keyEl = document.createElement("div");
+
+    keyEl.className = "key wide";
+    keyEl.innerText = key;
+
+    keyEl.onclick = () => {
+      if (key === "SPACE") {
+        typedText += " ";
+      } else {
+        typedText = typedText.slice(0, -1);
+      }
+
+      update();
+    };
+
+    specialRow.appendChild(keyEl);
+  });
+
+  kb.appendChild(specialRow);
+}
+
 /* INIT */
-window.onload = startGame;
-setInterval(drawGraph, 500);
+window.onload = () => {
+  buildKeyboard();
+  startGame();
+};
