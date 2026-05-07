@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TZType Rebuild</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button id="menuBtn" onclick="toggleMenu(this)">☰</button>
+
+  <div class="controls">
+    <button onclick="setMode('words')">Words</button>
+    <button onclick="setMode('sentences')">Sentences</button>
+    <button onclick="setMode('one')">1 Word</button>
+    <button onclick="toggleKeyboard()" id="keyboardBtn">Keyboard</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="sentence"></div>
+  <div id="typed"></div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div>WPM: <span id="wpm">0</span></div>
+  <div>ACC: <span id="accuracy">100</span>%</div>
+</div>
+
+<!-- GRAPH -->
+<canvas id="graph"></canvas>
+
+<!-- KEYBOARD -->
+<div id="keyboard"></div>
+
+<script src="js/engine.js"></script>
+<script src="js/keyboard.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/ui.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
