@@ -1,67 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZType Fixed</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pro Typing Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="layout">
+<!-- HAMBURGER -->
+<div class="hamburger" onclick="toggleMenu(this)">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
 
-  <!-- HAMBURGER (ALWAYS VISIBLE) -->
-  <div class="hamburger" onclick="toggleMenu()">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="title">Typing Game</div>
 
-    <div class="title">Typing Game</div>
+  <button onclick="showPage('game')">Game</button>
+  <button onclick="showPage('history')">History</button>
 
-    <button onclick="showPage('game')" class="active">Game</button>
-    <button onclick="showPage('history')">History</button>
+  <button onclick="toggleMode()">Change Mode</button>
+  <button onclick="toggleKeyboard()">Keyboard</button>
 
-  </div>
+</div>
 
-  <!-- CONTENT -->
-  <div class="content">
+<!-- CONTENT -->
+<div class="content">
 
-    <!-- GAME -->
-    <div class="app" id="gamePage">
+  <div id="gamePage">
 
-      <div class="top">
-        <span>WPM: <b id="wpm">0</b></span>
-        <span>Acc: <b id="accuracy">100</b>%</span>
-        <span>Best: <b id="highScore">0</b></span>
-      </div>
-
-      <div id="sentence" class="sentence"></div>
-      <div id="typed" class="typed"></div>
-
-      <canvas id="wpmChart"></canvas>
-
-      <div class="controls">
-        <button onclick="toggleMode()">Mode</button>
-        <button onclick="toggleKeyboard()">Keyboard</button>
-      </div>
-
-      <div id="keyboard"></div>
-
-      <button onclick="startGame()">Start</button>
-
+    <div class="top">
+      <div>WPM: <span id="wpm">0</span></div>
+      <div>Accuracy: <span id="accuracy">100</span>%</div>
+      <div>Mode: <span id="modeText">words</span></div>
     </div>
 
-    <!-- HISTORY -->
-    <div class="app" id="historyPage" style="display:none;">
-      <h2>History</h2>
-      <div id="historyBox"></div>
-    </div>
+    <div id="sentence" class="sentence"></div>
+    <div id="typed"></div>
+
+    <canvas id="wpmChart"></canvas>
+
+    <div id="keyboard"></div>
 
   </div>
+
+  <div id="historyPage" style="display:none;">
+    <h2>History</h2>
+  </div>
+
 </div>
 
 <script src="script.js"></script>
