@@ -1,0 +1,70 @@
+body {
+  margin: 0;
+  font-family: monospace;
+  background: #0f0f0f;
+  color: white;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #1a1a1a;
+}
+
+button {
+  background: #222;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin: 2px;
+  border-radius: 6px;
+}
+
+button:hover {
+  background: #333;
+}
+
+#game {
+  padding: 20px;
+  font-size: 20px;
+}
+
+#sentence {
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+
+#typed {
+  color: #4caf50;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+  padding: 10px;
+}
+
+#graph {
+  width: 100%;
+  height: 150px;
+  background: #111;
+}
+
+#keyboard {
+  margin-top: 20px;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+.key {
+  padding: 10px;
+  margin: 3px;
+  background: #222;
+  border-radius: 5px;
+  min-width: 30px;
+  text-align: center;
+}
