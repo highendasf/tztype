@@ -47,7 +47,7 @@ function startGame() {
   } else if (mode === "sentences") {
     sentence = sentences[Math.floor(Math.random() * sentences.length)];
 
-  } else if (mode === "oneword") {
+  } else if (mode === "one") {
     sentence = words[Math.floor(Math.random() * words.length)];
   }
 
@@ -82,25 +82,42 @@ function render() {
 }
 
 /* =========================
-   INPUT
+   INPUT CORE (SHARED)
+========================= */
+
+function handleInput(key) {
+
+  if (finished) return;
+  if (!startTime) startGame();
+
+  if (key === "BACK") {
+    typedText = typedText.slice(0, -1);
+  } else {
+    typedText += key;
+  }
+
+  update();
+}
+
+/* =========================
+   PHYSICAL KEYBOARD
 ========================= */
 
 document.addEventListener("keydown", (e) => {
 
-  if (finished) return;
-
-  if (!startTime) startGame();
-
   if (e.key === "Backspace") {
-    typedText = typedText.slice(0, -1);
-  } else if (e.key === " ") {
     e.preventDefault();
-    typedText += " ";
-  } else if (e.key.length === 1) {
-    typedText += e.key.toLowerCase();
+    handleInput("BACK");
   }
 
-  update();
+  else if (e.key === " ") {
+    e.preventDefault();
+    handleInput(" ");
+  }
+
+  else if (e.key.length === 1) {
+    handleInput(e.key.toLowerCase());
+  }
 });
 
 /* =========================
@@ -164,7 +181,7 @@ function getWPM() {
 }
 
 /* =========================
-   ACCURACY
+   ACC
 ========================= */
 
 function getACC() {
@@ -239,15 +256,12 @@ function drawLine(data, color) {
 }
 
 /* =========================
-   MENU (FIXED GLOBAL ACCESS)
+   MENU (FIX)
 ========================= */
 
 function toggleMenu(btn) {
-  const sidebar = document.querySelector(".sidebar");
-  if (!sidebar) return;
-
-  sidebar.classList.toggle("show");
-  if (btn) btn.classList.toggle("active");
+  document.querySelector(".sidebar")?.classList.toggle("show");
+  btn?.classList.toggle("active");
 }
 
 /* =========================
@@ -255,10 +269,7 @@ function toggleMenu(btn) {
 ========================= */
 
 function setMode(m) {
-
-  if (m === "one") mode = "oneword";
-  else mode = m;
-
+  mode = (m === "one") ? "one" : m;
   startGame();
 }
 
@@ -267,25 +278,33 @@ function setMode(m) {
 ========================= */
 
 function toggleKeyboard() {
-
   const kb = document.getElementById("keyboard");
   if (!kb) return;
 
-  kb.style.display =
-    kb.style.display === "none" ? "block" : "none";
+  const show = kb.style.display === "none" || kb.style.display === "";
+  kb.style.display = show ? "block" : "none";
+
+  document.body.classList.toggle("keyboard-open", show);
 }
 
 /* =========================
-   CRITICAL FIX: GLOBAL EXPORT
-   (THIS FIXES YOUR ERROR)
+   GLOBAL CONNECT (CRITICAL)
 ========================= */
 
 window.toggleMenu = toggleMenu;
 window.setMode = setMode;
 window.toggleKeyboard = toggleKeyboard;
+window.handleInput = handleInput;
 
 /* =========================
    INIT
 ========================= */
 
-window.onload = startGame;
+window.onload = () => {
+  startGame();
+
+  // auto-build keyboard if keyboard.js exists
+  if (typeof buildKeyboard === "function") {
+    buildKeyboard();
+  }
+};
