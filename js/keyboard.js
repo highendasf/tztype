@@ -1,41 +1,52 @@
 function buildKeyboard() {
 
-  const keys = [
-    ["Q","W","E","R","T","Y","U","I","O","P"],
-    ["A","S","D","F","G","H","J","K","L"],
-    ["Z","X","C","V","B","N","M"]
+  const layout = [
+    ["q","w","e","r","t","y","u","i","o","p"],
+    ["a","s","d","f","g","h","j","k","l"],
+    ["z","x","c","v","b","n","m"]
   ];
 
   const kb = document.getElementById("keyboard");
+  if (!kb) return;
+
   kb.innerHTML = "";
 
-  keys.forEach(row => {
+  layout.forEach(row => {
 
-    const r = document.createElement("div");
-    r.className = "row";
+    const rowEl = document.createElement("div");
+    rowEl.className = "kb-row";
 
-    row.forEach(k => {
+    row.forEach(key => {
 
-      const key = document.createElement("button");
-      key.innerText = k;
+      const btn = document.createElement("button");
+      btn.className = "kb-key";
+      btn.textContent = key;
 
-      key.onclick = () => inputKey(k.toLowerCase());
+      btn.addEventListener("click", () => {
+        if (typeof window.handleInput === "function") {
+          window.handleInput(key);
+        }
+      });
 
-      r.appendChild(key);
+      rowEl.appendChild(btn);
     });
 
-    kb.appendChild(r);
+    kb.appendChild(rowEl);
   });
 
+  /* SPECIAL KEYS */
   const special = document.createElement("div");
+  special.className = "kb-row";
 
   const space = document.createElement("button");
-  space.innerText = "SPACE";
-  space.onclick = () => inputKey(" ");
+  space.className = "kb-key wide";
+  space.textContent = "space";
+  space.onclick = () => window.handleInput?.(" ");
 
   const back = document.createElement("button");
-  back.innerText = "⌫";
-  back.onclick = () => inputKey("BACK");
+  back.className = "kb-key wide";
+  back.textContent = "⌫";
+  back.onclick = () => window.handleInput?.("BACK");
 
   special.appendChild(space);
   special.appendChild(back);
@@ -43,10 +54,18 @@ function buildKeyboard() {
   kb.appendChild(special);
 }
 
+/* toggle visibility */
 function toggleKeyboard() {
-
   const kb = document.getElementById("keyboard");
+  if (!kb) return;
 
   kb.style.display =
     kb.style.display === "none" ? "block" : "none";
 }
+
+/* INIT HOOK */
+window.addEventListener("load", buildKeyboard);
+
+/* GLOBAL ACCESS (IMPORTANT) */
+window.buildKeyboard = buildKeyboard;
+window.toggleKeyboard = toggleKeyboard;
