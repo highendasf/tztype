@@ -1,3 +1,7 @@
+/* =========================
+   CORE STATE
+========================= */
+
 let typedText = "";
 let currentSentence = "";
 let startTime = null;
@@ -13,9 +17,15 @@ let smoothAcc = 100;
 
 let graphLoop = null;
 
+let lastWPM = 0;
+let lastAcc = 100;
+
+let keyboardVisible = true;
+
 /* =========================
    DATA
 ========================= */
+
 const words = [
   "apple","banana","code","speed","typing","focus","keyboard",
   "practice","accuracy","javascript","gaming","monitor"
@@ -31,29 +41,28 @@ const sentences = [
 /* =========================
    START GAME
 ========================= */
+
 function startGame() {
 
   finished = false;
-
-  if (mode === "words") {
-    currentSentence = Array.from({ length: 12 }, () =>
-      words[Math.floor(Math.random() * words.length)]
-    ).join(" ");
-
-  } else if (mode === "sentences") {
-    currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
-
-  } else if (mode === "oneword") {
-    currentSentence = words[Math.floor(Math.random() * words.length)];
-
-  } else {
-    currentSentence = Array.from({ length: 25 }, () =>
-      words[Math.floor(Math.random() * words.length)]
-    ).join(" ");
-  }
-
   typedText = "";
   startTime = Date.now();
+
+  currentSentence =
+    mode === "words"
+      ? Array.from({ length: 12 }, () =>
+          words[Math.floor(Math.random() * words.length)]
+        ).join(" ")
+
+      : mode === "sentences"
+      ? sentences[Math.floor(Math.random() * sentences.length)]
+
+      : mode === "oneword"
+      ? words[Math.floor(Math.random() * words.length)]
+
+      : Array.from({ length: 25 }, () =>
+          words[Math.floor(Math.random() * words.length)]
+        ).join(" ");
 
   wpmHistory = [];
   accuracyHistory = [];
@@ -71,22 +80,28 @@ function startGame() {
 /* =========================
    RENDER TEXT
 ========================= */
+
 function render() {
-  document.getElementById("sentence").innerHTML =
-    currentSentence.split("")
-      .map(c => c === " "
+  const el = document.getElementById("sentence");
+  if (!el) return;
+
+  el.innerHTML = currentSentence
+    .split("")
+    .map(c =>
+      c === " "
         ? `<span class="space">·</span>`
         : `<span class="letter">${c}</span>`
-      ).join("");
+    ).join("");
 }
 
 /* =========================
-   PHYSICAL KEY INPUT
+   INPUT (KEYBOARD)
 ========================= */
+
 document.addEventListener("keydown", (e) => {
 
   if (finished) return;
-
+  if (!currentSentence) return;
   if (!startTime) startGame();
 
   if (e.key === "Backspace") {
@@ -106,15 +121,20 @@ document.addEventListener("keydown", (e) => {
 /* =========================
    UPDATE UI
 ========================= */
+
 function update() {
 
-  document.getElementById("typed").innerText = typedText;
+  lastWPM = getWPM();
+  lastAcc = getAcc();
 
-  const wpm = getWPM();
-  const acc = getAcc();
+  const typedEl = document.getElementById("typed");
+  if (typedEl) typedEl.innerText = typedText;
 
-  document.getElementById("wpm").innerText = wpm;
-  document.getElementById("accuracy").innerText = acc;
+  const wpmEl = document.getElementById("wpm");
+  if (wpmEl) wpmEl.innerText = lastWPM;
+
+  const accEl = document.getElementById("accuracy");
+  if (accEl) accEl.innerText = lastAcc;
 
   const modeEl = document.getElementById("modeText");
   if (modeEl) modeEl.innerText = mode;
@@ -130,6 +150,7 @@ function update() {
 /* =========================
    HIGHLIGHT
 ========================= */
+
 function highlight() {
 
   const letters = document.querySelectorAll(".letter");
@@ -146,18 +167,17 @@ function highlight() {
       return;
     }
 
-    if (typed === expected) el.classList.add("correct");
-    else el.classList.add("wrong");
+    el.classList.add(typed === expected ? "correct" : "wrong");
   });
 }
 
 /* =========================
-   WPM (SMOOTH)
+   WPM
 ========================= */
+
 function getWPM() {
 
   const time = Math.max((Date.now() - startTime) / 1000, 0.5);
-
   const raw = (typedText.length / 5) / (time / 60);
 
   smoothWPM += (raw - smoothWPM) * 0.1;
@@ -166,8 +186,9 @@ function getWPM() {
 }
 
 /* =========================
-   ACCURACY (SMOOTH)
+   ACCURACY
 ========================= */
+
 function getAcc() {
 
   let correct = 0;
@@ -186,8 +207,9 @@ function getAcc() {
 }
 
 /* =========================
-   GRAPH
+   GRAPH (ULTRA SMOOTH + FIXED)
 ========================= */
+
 function drawGraph() {
 
   const c = document.getElementById("wpmChart");
@@ -200,10 +222,10 @@ function drawGraph() {
 
   ctx.clearRect(0, 0, c.width, c.height);
 
-  wpmHistory.push(getWPM());
-  accuracyHistory.push(getAcc());
+  wpmHistory.push(lastWPM);
+  accuracyHistory.push(lastAcc);
 
-  if (wpmHistory.length > 60) {
+  if (wpmHistory.length > 70) {
     wpmHistory.shift();
     accuracyHistory.shift();
   }
@@ -213,8 +235,9 @@ function drawGraph() {
 }
 
 /* =========================
-   GRAPH LINE
+   GRAPH LINE (GRADIENT + SMOOTH CURVE)
 ========================= */
+
 function drawLine(data, color) {
 
   const c = document.getElementById("wpmChart");
@@ -222,60 +245,108 @@ function drawLine(data, color) {
 
   if (data.length < 2) return;
 
+  const step = c.width / (data.length - 1);
+
+  /* FILL */
   ctx.beginPath();
 
   for (let i = 0; i < data.length; i++) {
 
-    const x = (i / (data.length - 1)) * c.width;
+    const x = i * step;
     const y = c.height - (data[i] / 120) * c.height;
 
     if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    else {
+
+      const px = (i - 1) * step;
+      const py = c.height - (data[i - 1] / 120) * c.height;
+
+      const cx = (px + x) / 2;
+      const cy = (py + y) / 2;
+
+      ctx.quadraticCurveTo(px, py, cx, cy);
+    }
+  }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, c.height);
+
+  gradient.addColorStop(0, color === "#4caf50"
+    ? "rgba(76,175,80,0.45)"
+    : "rgba(33,150,243,0.45)");
+
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.lineTo(c.width, c.height);
+  ctx.lineTo(0, c.height);
+  ctx.closePath();
+
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  /* LINE */
+  ctx.beginPath();
+
+  for (let i = 0; i < data.length; i++) {
+
+    const x = i * step;
+    const y = c.height - (data[i] / 120) * c.height;
+
+    if (i === 0) ctx.moveTo(x, y);
+    else {
+
+      const px = (i - 1) * step;
+      const py = c.height - (data[i - 1] / 120) * c.height;
+
+      const cx = (px + x) / 2;
+      const cy = (py + y) / 2;
+
+      ctx.quadraticCurveTo(px, py, cx, cy);
+    }
   }
 
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = color;
+
   ctx.stroke();
+  ctx.shadowBlur = 0;
 }
 
 /* =========================
-   MENU
+   MODE SWITCH (MAIN UI)
 ========================= */
-function toggleMenu(el) {
-  document.querySelector(".sidebar")?.classList.toggle("show");
-  el?.classList.toggle("active");
-}
 
-/* =========================
-   MODE SWITCH
-========================= */
 function toggleMode() {
 
   if (mode === "words") mode = "sentences";
   else if (mode === "sentences") mode = "oneword";
-  else if (mode === "oneword") mode = "pro";
   else mode = "words";
 
   startGame();
 }
 
 /* =========================
-   PAGE SWITCH
+   KEYBOARD TOGGLE (MAIN UI)
 ========================= */
-function showPage(p) {
 
-  const g = document.getElementById("gamePage");
-  const h = document.getElementById("historyPage");
+function toggleKeyboard() {
 
-  if (!g || !h) return;
+  const kb = document.getElementById("keyboard");
+  if (!kb) return;
 
-  g.style.display = p === "game" ? "block" : "none";
-  h.style.display = p === "history" ? "block" : "none";
+  keyboardVisible = !keyboardVisible;
+
+  kb.style.display = keyboardVisible ? "block" : "none";
+
+  const btn = document.getElementById("keyboardBtn");
+  if (btn) btn.innerText = keyboardVisible ? "Hide Keyboard" : "Show Keyboard";
 }
 
 /* =========================
-   KEYBOARD SYSTEM (FULL FIX)
+   KEYBOARD BUILDER
 ========================= */
+
 function buildKeyboard() {
 
   const layout = [
@@ -301,6 +372,7 @@ function buildKeyboard() {
       keyEl.innerText = key;
 
       keyEl.onclick = () => {
+
         if (finished) return;
         if (!startTime) startGame();
 
@@ -314,7 +386,6 @@ function buildKeyboard() {
     kb.appendChild(rowEl);
   });
 
-  /* SPACE + BACKSPACE */
   const special = document.createElement("div");
   special.className = "row";
 
@@ -322,9 +393,6 @@ function buildKeyboard() {
   space.className = "key wide";
   space.innerText = "SPACE";
   space.onclick = () => {
-    if (finished) return;
-    if (!startTime) startGame();
-
     typedText += " ";
     update();
   };
@@ -333,8 +401,6 @@ function buildKeyboard() {
   back.className = "key wide";
   back.innerText = "⌫";
   back.onclick = () => {
-    if (finished) return;
-
     typedText = typedText.slice(0, -1);
     update();
   };
@@ -348,6 +414,7 @@ function buildKeyboard() {
 /* =========================
    INIT
 ========================= */
+
 window.onload = () => {
   buildKeyboard();
   startGame();
